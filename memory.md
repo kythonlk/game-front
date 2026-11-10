@@ -14,9 +14,10 @@
 - Robot preview: `/s.html?show=enemies&eshow=soldier&efreeze=1`.
 
 ## Current state (update me)
-- Robot and recorded-audio baseline is committed/pushed as `0d47254`. Sniper additions are included in the subsequent task commit on `main`; user requested push. See `git log` for the commit ID.
+- Baseline and sniper gameplay are committed/pushed through `5225256`. Detailed sniper model changes are pending locally in `s.html` and this memory.
 - Humanoid robot has layered bevelled armor, articulated knees/ankles/arms, a visor and rifle; rigid parts batched per material/joint.
 - 18 CC0 recordings embedded directly in `s.html`, serving 17 combat effect names. Four gunshot takes, recorded reload phases, shell drops and mechanical robot cues. Synthetic gunshot generator removed, generated shot tails and master distortion bypassed.
+- SR-7 visual upgrade: shared PAC-9 finish shaders and textured glove meshes, machined receiver, vented rail, fluted barrel, adjustable stock, marked chassis, scope rings/turrets/coated lenses, hand/bolt/reload animation and muzzle flash. Batched into 19 meshes / 48,892 triangles.
 - Added SR-7 sniper: keys 1/2 or X to swap; touch SWAP; five rounds + 30 reserve, 110 damage, 550 range, 1.25s bolt cycle, 2.8s reload, 4× scope (22° FOV), recorded shot.
 - Browser regression passed for combat, 15 recorded sounds, sniper firing/cooldown/reload/switching/scope. Visual hip and scope previews inspected. Preview server stopped after verification.
 
@@ -41,7 +42,13 @@
 - Files: `s.html`, audio credits/manifest, embed tool, browser tests, memory.
 - Verified: Prior full browser regression passed; pre-commit inline JavaScript syntax and whitespace checks passed. No gameplay changes since validation beyond UTF-8 metadata.
 
+### 2026-11-10 — codex — Match sniper detail to main rifle
+- What: Rebuilt SR-7 with PAC-9 materials/gloves/optics, detailed hardware and markings, animated hands, recoil flash, movement sway, and improved framing.
+- Files: `s.html`, `memory.md`.
+- Verified: Existing full browser regression passed, including sniper damage/range, single-shot behavior, ammo/reload/switching, scope and 15 audio effects; zero errors. Hip/bolt/reload views inspected separately. Corrected lens/backing overlap and rechecked rendering.
+
 ## Gotchas
+- Scope lens backing must sit behind the transparent glass, not on the same plane; coplanar caps cause blocky depth artifacts. Static sniper geometry is merged by material per chassis/magazine/bolt before adding gloves and labels.
 - `dm` now wraps `PAC9_MK` and `SALT_SNIPER`; player FOV/look scaling reads active weapon settings. New sounds must be registered before the embedded sample mapping runs.
 - Most of `s.html` is a minified bundle with enormous lines; use targeted substring reads instead of unrestricted grep output. Soldier implementation is `SOLDIER_MK`, enemy factory `Em`, audio engine `u_`, sound registry `Go`.
 - Some source Opus recordings decode above full scale. Normalize floating-point samples before converting to PCM16 to avoid clipping.
