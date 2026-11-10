@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Maze Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="game-controls">
+        <button id="start-game">Start Game</button>
+        <button id="pause-game">Pause Game</button>
+        <button id="reset-game">Reset Game</button>
+    </div>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+    </div>
+    <div id="hud">
+      
+        <div id="game-message">
+            <div id="status">Time: 0 s</div>
+            <div id="objective">Objective: Reach the goal!</div>
+            <p id="message-text">Welcome to Mind Maze!</p>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
