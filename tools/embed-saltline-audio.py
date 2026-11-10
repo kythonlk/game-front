@@ -1,4 +1,4 @@
-"""Embed selected CC0 recordings from an extracted openspades-free-pak checkout.
+"""Embed selected licensed recordings from an extracted openspades-free-pak checkout.
 Usage: python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak
 Requires ffmpeg. Embedded PCM keeps s.html playable offline, including file://.
 """
@@ -8,6 +8,7 @@ root=Path(__file__).resolve().parents[1]
 source=Path(sys.argv[1]); sr=32000
 # name: source path under Sounds/Weapons, start seconds, maximum duration
 clips={
+ 'shotgun':('Shotgun/FireLocal.opus',0,1.15),
  'sniper':('Rifle/FireLocal.opus',0,1.15),
  **{f'shot{n}':(f'SMG/V2Local{n}.opus',0,.65) for n in range(1,5)},
  **{f'enemy{n}':(f'SMG/V2Third{n}.opus',0,.65) for n in range(1,5)},
@@ -32,8 +33,8 @@ for name,(filename,start,duration) in clips.items():
  pcm=array.array('h',(round(v/peak*.92*min(1,j/(sr*.0002),(len(samples)-1-j)/(sr*.012))*32767) for j,v in enumerate(samples)))
  if sys.byteorder!='little':pcm.byteswap()
  encoded[name]=base64.b64encode(pcm.tobytes()).decode()
- manifest[name]={'source':'Sounds/Weapons/'+filename,'start':start,'duration':len(samples)/sr,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'license':'CC0'}
-block='''/* RECORDED AUDIO BEGIN — CC0 recordings; see assets/audio/CREDITS.md. */
+ manifest[name]={'source':'Sounds/Weapons/'+filename,'start':start,'duration':len(samples)/sr,'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'license':'CC-BY-3.0' if name=='shotgun' else 'CC0'}
+block='''/* RECORDED AUDIO BEGIN — licensed recordings; see assets/audio/CREDITS.md. */
 const SALT_PCM = '''+json.dumps(encoded,separators=(',',':'))+''';
 const SALT_SAMPLE_CACHE = new Map;
 function SALT_RECORDED(key) {
@@ -43,6 +44,7 @@ function SALT_RECORDED(key) {
  SALT_SAMPLE_CACHE.set(key,samples);return samples.slice();
 }
 const SALT_SAMPLE_MAP={
+ shotgun_shot:['shotgun'],
  sniper_shot:['sniper'],
  rifle_shot:['shot1','shot2','shot3','shot4'],
  soldier_fire:['enemy1','enemy2','enemy3','enemy4'],

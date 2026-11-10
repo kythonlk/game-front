@@ -1,4 +1,11 @@
 {
+  "shotgun": {
+    "source": "Sounds/Weapons/Shotgun/FireLocal.opus",
+    "start": 0,
+    "duration": 1.15,
+    "sha256": "c01fc89e68d6ea2fc2a1dac877b3ffdcbc061f8311268481b5892a897cae45d2",
+    "license": "CC-BY-3.0"
+  },
   "sniper": {
     "source": "Sounds/Weapons/Rifle/FireLocal.opus",
     "start": 0,
