@@ -8,6 +8,7 @@ identify the following sources and creators:
 
 | Embedded clips | Original source | Creator |
 | --- | --- | --- |
+| sniper | [The Free Firearm Sound Library](https://opengameart.org/content/the-free-firearm-sound-library), B_16P | Ben Jaszczak et al. |
 | shot1–4, enemy1–4 | [The Free Firearm Sound Library](https://opengameart.org/content/the-free-firearm-sound-library), AK-47/C_28P | Ben Jaszczak et al. |
 | magout, magin, bolt | [Handgun reload sound effect](https://opengameart.org/content/handgun-reload-sound-effect) | zer0_sol |
 | dry, shell1, shell2 | [100 CC0 metal and wood SFX](https://opengameart.org/content/100-cc0-metal-and-wood-sfx) | rubberduck |

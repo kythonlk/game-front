@@ -1,4 +1,11 @@
 {
+  "sniper": {
+    "source": "Sounds/Weapons/Rifle/FireLocal.opus",
+    "start": 0,
+    "duration": 0.3935,
+    "sha256": "3f7dbe48bf0a44dff112a1cdca4947e09f45d44a6053ee36663e47b3bb4304bf",
+    "license": "CC0"
+  },
   "shot1": {
     "source": "Sounds/Weapons/SMG/V2Local1.opus",
     "start": 0,

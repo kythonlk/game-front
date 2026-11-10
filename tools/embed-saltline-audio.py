@@ -8,6 +8,7 @@ root=Path(__file__).resolve().parents[1]
 source=Path(sys.argv[1]); sr=32000
 # name: source path under Sounds/Weapons, start seconds, maximum duration
 clips={
+ 'sniper':('Rifle/FireLocal.opus',0,1.15),
  **{f'shot{n}':(f'SMG/V2Local{n}.opus',0,.65) for n in range(1,5)},
  **{f'enemy{n}':(f'SMG/V2Third{n}.opus',0,.65) for n in range(1,5)},
  'magout':('Rifle/ReloadLocal.opus',.09,.25),
@@ -42,6 +43,7 @@ function SALT_RECORDED(key) {
  SALT_SAMPLE_CACHE.set(key,samples);return samples.slice();
 }
 const SALT_SAMPLE_MAP={
+ sniper_shot:['sniper'],
  rifle_shot:['shot1','shot2','shot3','shot4'],
  soldier_fire:['enemy1','enemy2','enemy3','enemy4'],
  gull_fire:['enemy2','enemy3'],hound_fire:['enemy1','enemy4'],

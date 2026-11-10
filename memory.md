@@ -14,10 +14,11 @@
 - Robot preview: `/s.html?show=enemies&eshow=soldier&efreeze=1`.
 
 ## Current state (update me)
-- Robot and recorded-audio changes are included in the task commit on `main`; user explicitly requested commit/push. See `git log` and `git status` for synchronization status.
+- Robot and recorded-audio baseline is committed/pushed as `0d47254`. Sniper additions are included in the subsequent task commit on `main`; user requested push. See `git log` for the commit ID.
 - Humanoid robot has layered bevelled armor, articulated knees/ankles/arms, a visor and rifle; rigid parts batched per material/joint.
-- 17 CC0 recordings embedded directly in `s.html`, serving 16 combat effect names. Four gunshot takes, recorded reload phases, shell drops and mechanical robot cues. Synthetic gunshot generator removed, generated shot tails and master distortion bypassed.
-- Chromium regression passed with no runtime errors; 14 recorded-effect playback calls passed. PCM peak/endpoints and four distinct gunshot takes verified. Audio quality has not been auditioned through speakers. Preview server stopped after verification.
+- 18 CC0 recordings embedded directly in `s.html`, serving 17 combat effect names. Four gunshot takes, recorded reload phases, shell drops and mechanical robot cues. Synthetic gunshot generator removed, generated shot tails and master distortion bypassed.
+- Added SR-7 sniper: keys 1/2 or X to swap; touch SWAP; five rounds + 30 reserve, 110 damage, 550 range, 1.25s bolt cycle, 2.8s reload, 4× scope (22° FOV), recorded shot.
+- Browser regression passed for combat, 15 recorded sounds, sniper firing/cooldown/reload/switching/scope. Visual hip and scope previews inspected. Preview server stopped after verification.
 
 ## Work log
 ### 2026-11-10 — codex — Humanoid robots and combat audio
@@ -30,7 +31,18 @@
 - Files: `s.html`, `assets/audio/{CREDITS.md,manifest.json}`, `tools/embed-saltline-audio.py`, `tests/check-saltline.cjs`, `memory.md`.
 - Verified: Browser regression passed, 14 recorded effects playable, 96 buffers loaded, zero runtime errors; 17 PCM clips passed peak/fade checks. `git fetch origin` showed main had no divergence before commit.
 
+### 2026-11-10 — codex — Add SR-7 sniper rifle
+- What: Added a selectable sniper with its own model, scope, ammo, bolt/reload animations, recorded gunshot, keyboard/touch switching, and HUD cues. Preserved PAC-9 via a loadout wrapper.
+- Files: `s.html`, audio credits/manifest and embed tool, browser regression test.
+- Verified: Full Chromium regression passed; scope FOV 22.04°, one shot per click, no repeat while held, reload 3→5 rounds consuming two reserve, rifle ammo preserved, empty magazine stable, 110 damage/550 range, zero runtime errors. Hip/scoped previews inspected; added UTF-8 declaration after spotting misdecoded HUD punctuation.
+
+### 2026-11-10 — codex — Commit and push sniper
+- What: Prepared the tested SR-7 changes for commit and push to `origin/main` at user request.
+- Files: `s.html`, audio credits/manifest, embed tool, browser tests, memory.
+- Verified: Prior full browser regression passed; pre-commit inline JavaScript syntax and whitespace checks passed. No gameplay changes since validation beyond UTF-8 metadata.
+
 ## Gotchas
+- `dm` now wraps `PAC9_MK` and `SALT_SNIPER`; player FOV/look scaling reads active weapon settings. New sounds must be registered before the embedded sample mapping runs.
 - Most of `s.html` is a minified bundle with enormous lines; use targeted substring reads instead of unrestricted grep output. Soldier implementation is `SOLDIER_MK`, enemy factory `Em`, audio engine `u_`, sound registry `Go`.
 - Some source Opus recordings decode above full scale. Normalize floating-point samples before converting to PCM16 to avoid clipping.
 - Embedded audio is rebuilt with `python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak`; pinned upstream revision and source hashes are recorded in `assets/audio`.
