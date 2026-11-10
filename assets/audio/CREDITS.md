@@ -1,6 +1,6 @@
 # Saltline recorded sound effects
 
-The embedded combat samples in `s.html` use **CC0 1.0** recordings plus the **CC-BY 3.0** shotgun shot from
+The embedded combat samples in `index.html` use **CC0 1.0** recordings plus the **CC-BY 3.0** shotgun shot from
 [OpenSpades Free Assets](https://github.com/DeathByDenim/openspades-free-pak),
 revision `1e6b28721a2e5e51f84a572d101079bf186c66d5`.
 The pack's [per-file credits](https://github.com/DeathByDenim/openspades-free-pak/blob/1e6b28721a2e5e51f84a572d101079bf186c66d5/License/Credits-pak001-Free.md)
@@ -31,6 +31,6 @@ enemy gunfire. The original synthetic shot tails and master waveshaper are
 bypassed to retain the recorded attack and decay.
 
 `manifest.json` records source paths, SHA-256 hashes, and edit boundaries.
-The audio is embedded as base64 PCM in `s.html`, so playing the game needs no
+The audio is embedded as base64 PCM in `index.html`, so playing the game needs no
 external audio requests and works when the HTML is opened directly.
 Rebuild with `python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak`.

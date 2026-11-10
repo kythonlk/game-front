@@ -1,11 +1,11 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-for(const script of fs.readFileSync('s.html','utf8').matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))new vm.Script(script[1]);
+for(const script of fs.readFileSync('index.html','utf8').matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))new vm.Script(script[1]);
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--autoplay-policy=no-user-gesture-required']});const page=await browser.newPage({viewport:{width:1100,height:800}});page.on('pageerror',e=>console.log('PAGEERROR',e.message));
-await page.goto('http://127.0.0.1:8087/s.html?show=enemies&eshow=soldier&efreeze=1');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await page.waitForFunction(()=>document.getElementById("boot").hidden);await page.locator('#boot').evaluate(el=>el.remove());await page.screenshot({path:'/tmp/saltline-robot.png'});console.log('SHOWCASE',await page.evaluate(()=>({fatal:__fatal,errors:__errors,stats:__stats(),enemies:__G.enemies.list.length})));
-await page.goto('http://127.0.0.1:8087/s.html?autostart=1&q=low');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await page.evaluate(()=>{__G.renderer.setAnimationLoop(null);return __G.audio.ready;});await page.mouse.click(550,400);
+await page.goto('http://127.0.0.1:8087/index.html?show=enemies&eshow=soldier&efreeze=1');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await page.waitForFunction(()=>document.getElementById("boot").hidden);await page.locator('#boot').evaluate(el=>el.remove());await page.screenshot({path:'/tmp/saltline-robot.png'});console.log('SHOWCASE',await page.evaluate(()=>({fatal:__fatal,errors:__errors,stats:__stats(),enemies:__G.enemies.list.length})));
+await page.goto('http://127.0.0.1:8087/index.html?autostart=1&q=low');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await page.evaluate(()=>{__G.renderer.setAnimationLoop(null);return __G.audio.ready;});await page.mouse.click(550,400);
 const result=await page.evaluate(async()=>{const g=__G;g.player.invulnerable=true;const events={};for(const n of ['enemy:step','enemy:fire','enemy:hit','enemy:killed'])g.events.on(n,()=>events[n]=(events[n]||0)+1);const p=g.player.pos.clone();p.z-=5;const bot=g.enemies.spawn('soldier',p,{state:'alert',target:g.player.pos});if(!bot)throw Error('No soldier slot');bot.mode='engage';for(let j=0;j<240;j++)bot._update(1/60);bot.damage(20,bot.pos,null,'body');bot.damage(999,bot.pos,null,'weak');for(let j=0;j<410;j++)bot._update(1/60);const played={};for(const n of ['shotgun_shot','sniper_shot','rifle_shot','soldier_fire','soldier_step','soldier_alert','soldier_die','reload_magout','reload_magin','reload_bolt','rifle_dry','shell_bounce','impact_metal','impact_enemy','gull_fire','hound_fire'])played[n]=g.audio.play(n,{pos:p});return {events,played,retired:!bot.active,audio:g.audio.debug(),errors:__errors,fatal:__fatal};});assert.equal(result.fatal,null);for(const name of Object.keys(result.played))assert.ok(result.audio.recorded.includes(name),'Missing recording: '+name);assert.deepEqual(result.errors,[]);assert.equal(result.retired,true);for(const played of Object.values(result.played))assert.equal(played,true);for(const n of ['enemy:step','enemy:fire','enemy:hit','enemy:killed'])assert.ok(result.events[n]>0,n);console.log('PASS',result);
 const sniperResult=await page.evaluate(()=>{
  const g=__G,w=g.weapon,originalInput=g.input,originalShot=g.combat.playerShot;
@@ -53,8 +53,11 @@ async function saltAutoReloadAssertion() {
     w.ammo = 1; w.reserve = 0; input.fire = true; tick(.02); input.fire = false;
     tick(4);
     const zeroReserveStable = w.ammo === 0 && w.reserve === 0 && w.state === 'idle';
+    w.reset();w.select(1);tick(.4);w.ammo=1;w.reserve=3;input.fire=true;tick(.02);input.fire=false;
+    w.select(0);tick(.5);w.select(1);tick(1.4);const reequippedStarted=w.state==='reloading';tick(3);
+    const reequippedAutoReload=reequippedStarted&&w.ammo===3&&w.reserve===0;
     w.reset();
-    return { emptyAfterLastShot, reloadAfterBolt, refilledMag, zeroReserveStable };
+    return { emptyAfterLastShot, reloadAfterBolt, refilledMag, zeroReserveStable, reequippedAutoReload };
   } finally {
     g.input = originalInput; g.combat.playerShot = originalShot;
   }
@@ -64,7 +67,7 @@ async function saltAutoReloadAssertion() {
 // const result = await page.evaluate(saltAutoReloadAssertion);
 // assert.deepEqual(result, {emptyAfterLastShot:true, reloadAfterBolt:true, refilledMag:true, zeroReserveStable:true});
 
-const autoReloadResult=await page.evaluate(saltAutoReloadAssertion);assert.deepEqual(autoReloadResult,{emptyAfterLastShot:true,reloadAfterBolt:true,refilledMag:true,zeroReserveStable:true});console.log('AUTO RELOAD PASS',autoReloadResult);
+const autoReloadResult=await page.evaluate(saltAutoReloadAssertion);assert.deepEqual(autoReloadResult,{emptyAfterLastShot:true,reloadAfterBolt:true,refilledMag:true,zeroReserveStable:true,reequippedAutoReload:true});console.log('AUTO RELOAD PASS',autoReloadResult);
 // Run after the existing browser regression. Assumes `page` and strict `assert`.
 const shotgunResults=await page.evaluate(()=>{
  const g=__G,w=g.weapon,oldInput=g.input,oldPhysics=g.physics.raycast,oldEnemies=g.enemies.raycast;
@@ -228,9 +231,69 @@ async function checkSaltlineMissions(page, assert) {
   console.log('MISSIONS PASS', result);
 }
 
-// Usage: await checkSaltlineMissions(page, assert);
+async function checkDroneSwarm(page, assert) {
+ const result=await page.evaluate(()=>{
+  const g=__G,check=(ok,message)=>{if(!ok)throw Error(message);},originalSpawn=g.enemies.spawn,types=[];
+  g.enemies.spawn=function(type,...args){const enemy=originalSpawn.call(this,type,...args);if(enemy)types.push(type);return enemy;};
+  try{
+   g.game.start({mission:3});
+   for(let n=0;n<40;n++){g.enemies.update(.05);g.game.update(.05);}
+   check(g.game.state==='intro'&&g.player.health===g.player.maxHealth&&g.enemies.list.filter(e=>e.alive).every(e=>e.passive),'drones attacked during intro');
+   g.game.update(2);check(g.game.state==='playing'&&g.enemies.list.filter(e=>e.alive).every(e=>!e.passive),'drones stayed passive after intro');types.length=0;
+   g.game.start({mission:3,skipIntro:true});g.player.invulnerable=true;
+   const run=g.game.run,alive=()=>g.enemies.list.filter(e=>e.alive),tick=()=>{g.enemies.update(.25);g.game.update(.25);};
+   check(g.game.mission.id==='drone-swarm','wrong swarm profile');check(run.totalEnemies===20&&run.relays.length===0,'swarm mission targets');
+   check(run.queue.every(e=>e.type==='gull')&&alive().every(e=>e.type==='gull'),'ground enemy in swarm');
+   check(g.hud.root.querySelector('.h-relays').style.display==='none','relay HUD visible');
+   for(let n=0;n<60;n++)g.hud.update(.05);check(g.hud.root.querySelector('.h-obj-t').textContent.includes('20 remaining'),'swarm objective missing');
+   g.game.pause();const before=run.time;g.game.update(3);check(run.time===before,'paused swarm advanced');g.game.resume();
+   g.player.pos.copy(g.level.extraction.pos);g.game.debugCut();g.game.update(.25);check(g.game.state==='playing'&&run.cut===0,'boat or relay bypassed swarm');
+   g.player.pos.copy(g.level.playerStart.pos);
+   for(let n=0;n<120;n++)tick();check(alive().length===5&&run.queue.length>0,'swarm cap or queue incorrect');
+   // Hit an actual airborne hull through the shared weapon raycast/damage path.
+   const drone=alive()[0],origin=drone.pos.clone().add(new g.THREE.Vector3(0,2,0));
+   const hit=g.combat.playerShot(origin,new g.THREE.Vector3(0,-1,0),{damage:9999,range:4});
+   check(hit?.enemy===drone&&!drone.alive&&run.eliminated===1,'aerial weapon hit did not count');
+   g.player.health=30;g.weapon.reserve=1;let supply=false,maxActive=5;
+   for(let n=0;n<1000&&run.eliminated<19;n++){
+    for(const enemy of alive()){
+     if(run.eliminated>=19)break;
+     enemy.damage(9999,enemy.pos,null,'weak');
+     if(run.eliminated===5){check(g.player.health===50&&g.weapon.reserve>1,'five-kill supply missing');supply=true;}
+    }
+    tick();maxActive=Math.max(maxActive,alive().length);check(alive().length<=5,'swarm exceeded active cap');
+   }
+   for(let n=0;n<100&&alive().length===0;n++)tick();
+   check(run.eliminated===19&&run.spawned===20&&alive().length===1&&run.queue.length===0,'swarm budget not drained');
+   check(g.game.state==='playing','swarm completed before last drone');
+   for(let n=0;n<60;n++)g.hud.update(.05);check(g.hud.root.querySelector('.h-obj-t').textContent.includes('1 remaining'),'remaining-drone HUD stale');
+   check(g.hud.root.querySelectorAll('.h-wm.extract').length===0,'unexpected extraction marker');
+   const last=alive()[0];last.damage(9999,last.pos,null,'weak');tick();
+   check(g.game.state==='complete'&&run.eliminated===20,'last drone did not finish mission');
+   check(g.player.pos.distanceTo(g.level.extraction.pos)>5,'test inadvertently extracted');
+   g.game.update(4);check(g.game.menus.root.querySelector('.m-debrief .m-h').textContent==='Drone Swarm complete','wrong debrief');
+   check(g.game.menus.root.querySelector('[data-act="next"]').hidden,'last mission has next button');
+   check(types.length===20&&types.every(t=>t==='gull'),'non-drone or incorrect spawn budget');
+   const summary={map:g.level.map.id,spawned:run.spawned,eliminated:run.eliminated,maxActive,supply,actualAerialHit:true};
+   g.game.start({mission:3,skipIntro:true});check(run.eliminated===0&&run.spawned===4&&run.queue.length===16,'swarm retry did not reset');
+   g.player.invulnerable=false;g.player.damage(9999,g.player.pos);g.game.update(2);
+   check(g.game.state==='dead','swarm death failed');check(g.game.menus.root.querySelector('[data-f="dead-label"]').textContent==='Drones destroyed','wrong swarm death label');
+   g.game.start({mission:0,skipIntro:true});check(g.hud.root.querySelector('.h-relays').style.display!=='none','relay HUD not restored');
+   return {...summary,errors:__errors.slice(),fatal:__fatal};
+  }finally{g.enemies.spawn=originalSpawn;}
+ });
+ assert.equal(result.fatal,null);assert.deepEqual(result.errors,[]);
+ await page.evaluate(()=>{__G.game.pause();__G.game.menus.root.querySelector('[data-act="missions"]').click();});
+ await page.locator('[data-mission="3"]').click();assert.equal(await page.locator('[data-mission="3"]').getAttribute('aria-pressed'),'true');
+ assert.match(await page.locator('[data-mission="3"]').textContent(),/Drones only/);
+ await page.screenshot({path:'/tmp/saltline-swarm-'+result.map+'.png'});
+ await page.locator('[data-act="deploy"]').click();assert.equal(await page.evaluate(()=>__G.game.mission.id),'drone-swarm');
+ console.log('DRONE SWARM PASS',result);
+}
+
 
 await checkSaltlineMissions(page,assert);
+await checkDroneSwarm(page,assert);
 await page.evaluate(()=>{__G.game.start({mission:0,skipIntro:true});__G.player.invulnerable=true;});
 for(const [key,expected] of [['z',true],['ControlLeft',false],['ControlRight',false],['c',true]]){
  await page.keyboard.down(key);assert.equal(await page.evaluate(()=>{__G.input.update(1/60);return __G.input.crouch;}),expected,key);
@@ -246,4 +309,64 @@ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'
 await page.locator('[data-act="deploy"]').click();assert.equal(await page.evaluate(()=>__G.game.mission.id),'warehouse-sweep');
 assert.deepEqual(await page.evaluate(()=>__errors),[]);console.log('MISSION MENU PASS');
 
+// Map selection rebuilds the level using the same props with independent placement data.
+const originalMap=await page.evaluate(()=>({id:__G.level.map.id,containers:__G.level.placed.filter(p=>p.name.startsWith('container')),shell:__G.level.placed.filter(p=>(p.x>=-16&&p.x<=12&&p.z< -11)||p.x>17)}));
+assert.equal(originalMap.id,'berth4');
+await page.evaluate(()=>{__G.game.start({mission:1,skipIntro:true});__G.game.pause();__G.game.menus.root.querySelector('[data-act="missions"]').click();});
+await Promise.all([page.waitForURL('**/*map=crossdock*'),page.locator('[data-map="crossdock"]').click()]);
+await page.waitForFunction(()=>window.__ready,null,{timeout:60000});
+await page.waitForFunction(()=>document.getElementById('boot').hidden);await page.locator('#boot').evaluate(el=>el.remove());
+await page.evaluate(()=>__G.renderer.setAnimationLoop(null));
+assert.equal(await page.locator('[data-map="crossdock"]').getAttribute('aria-pressed'),'true');
+assert.equal(await page.locator('[data-mission="1"]').getAttribute('aria-pressed'),'true');
+const newMap=await page.evaluate(()=>{
+ const g=__G,l=g.level,nav=g.physics.nav,failures=[];
+ if(!nav.isWalkable(l.playerStart.pos.x,l.playerStart.pos.z))failures.push('blocked player start');
+ for(const target of [...l.objectives,{id:'extraction',pos:l.extraction.pos}]){
+  // Relay bodies are solid: verify a reachable point inside interaction range.
+  const reachable=Array.from({length:16},(_,n)=>new g.THREE.Vector3(target.pos.x+Math.cos(n*Math.PI/8)*1.6,0,target.pos.z+Math.sin(n*Math.PI/8)*1.6)).some(p=>{
+   if(!nav.isWalkable(p.x,p.z))return false;
+   const path=nav.findPath(l.playerStart.pos,p);return path?.length&&path.every(v=>nav.isWalkable(v.x,v.z))&&path[path.length-1].distanceTo(p)<.8;
+  });
+  if(!reachable)failures.push('unreachable '+target.id);
+ }
+ for(const spawn of l.enemySpawns.filter(p=>p.type==='ground'))if(!nav.isWalkable(spawn.pos.x,spawn.pos.z)||!nav.findPath(l.playerStart.pos,spawn.pos))failures.push('unreachable enemy spawn');
+ const containers=l.placed.filter(p=>p.name.startsWith('container'));
+ if(containers.some(p=>p.y===0&&nav.isWalkable(p.x,p.z)))failures.push('container without collision');
+ return {id:l.map.id,containers,shell:l.placed.filter(p=>(p.x>=-16&&p.x<=12&&p.z< -11)||p.x>17),failures,stats:l.stats,errors:__errors,fatal:__fatal};
+});
+assert.equal(newMap.id,'crossdock');assert.notDeepEqual(newMap.containers,originalMap.containers);assert.equal(newMap.shell.length,originalMap.shell.length);for(let n=0;n<newMap.shell.length;n++){const a=newMap.shell[n],b=originalMap.shell[n];assert.equal(a.name,b.name);for(const key of ['x','y','z','yaw'])assert.ok(Math.abs(a[key]-b[key])<.15,'shell landmark changed: '+a.name+' '+key);}assert.deepEqual(newMap.failures,[]);assert.deepEqual(newMap.errors,[]);assert.equal(newMap.fatal,null);
+await page.setViewportSize({width:1280,height:800});await page.screenshot({path:'/tmp/saltline-crossdock-menu.png'});
+await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/saltline-crossdock-mobile.png'});
+assert.equal(await page.locator('[data-map="crossdock"]').isVisible(),true);
+await checkSaltlineMissions(page,assert);
+await checkDroneSwarm(page,assert);
+await page.setViewportSize({width:1280,height:800});
+await page.evaluate(()=>{const g=__G;g.game.menus.show('none');g.hud.show(false);g.weapon.setVisible(false);g.camera.position.set(-38,38,46);g.camera.lookAt(0,0,0);g.camera.fov=65;g.camera.updateProjectionMatrix();g.render.post.fade=0;g.render.frame(.016);});
+await page.screenshot({path:'/tmp/salt-crossdock-overview.png'});
+console.log('MAP PASS',{id:newMap.id,stats:newMap.stats,routes:'all objectives, extraction and ground spawns reachable',missionPreserved:true});
+// Use raw screen coordinates so Playwright cannot hide an off-screen Deploy bug
+// by automatically scrolling the button into view.
+for(const [width,height] of [[1280,720],[1366,768],[1024,600],[800,600],[390,844],[360,640],[844,390]]){
+ await page.setViewportSize({width,height});
+ await page.evaluate(()=>{__G.game.start({mission:0,skipIntro:true});__G.game.pause();__G.game.menus.root.querySelector('[data-act="missions"]').click();document.querySelector('.m-title-main').scrollTop=0;});
+ await page.locator('[data-mission="3"]').click();
+ const target=await page.locator('[data-act="deploy"]').evaluate(button=>{const rect=button.getBoundingClientRect(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;return{x,y,visible:rect.top>=0&&rect.bottom<=innerHeight,hit:document.elementFromPoint(x,y)?.closest('button')===button};});
+ assert.ok(target.visible&&target.hit,'Deploy unreachable at '+width+'x'+height);
+ await page.mouse.click(target.x,target.y);
+ assert.equal(await page.evaluate(()=>__G.game.mission.id),'drone-swarm');
+ assert.equal(await page.evaluate(()=>__G.game.state),'intro');
+ await page.evaluate(()=>__G.game.update(4));assert.equal(await page.evaluate(()=>__G.game.state),'playing');
+}
+console.log('DEPLOY VISIBILITY PASS: seven desktop, mobile and landscape sizes');
+await page.setViewportSize({width:360,height:640});
+await page.evaluate(()=>{__G.game.start({mission:0,skipIntro:true});__G.game.pause();__G.game.menus.root.querySelector('[data-act="missions"]').click();});
+const touch=await page.context().newCDPSession(page);await touch.send('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:1});
+async function tapCenter(locator){const r=await locator.boundingBox();assert.ok(r);const x=r.x+r.width/2,y=r.y+r.height/2;await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
+await page.locator('[data-mission="3"]').scrollIntoViewIfNeeded();await tapCenter(page.locator('[data-mission="3"]'));
+assert.equal(await page.locator('[data-mission="3"]').getAttribute('aria-pressed'),'true');
+await page.screenshot({path:'/tmp/saltline-deploy-footer-mobile.png'});
+await tapCenter(page.locator('[data-act="deploy"]'));
+assert.equal(await page.evaluate(()=>__G.game.state),'intro');assert.equal(await page.evaluate(()=>__G.game.mission.id),'drone-swarm');assert.deepEqual(await page.evaluate(()=>__errors),[]);
+await touch.detach();console.log('TOUCH DEPLOY PASS');
 await browser.close();})().catch(e=>{console.error(e);process.exit(1)});
