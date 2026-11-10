@@ -1,0 +1,121 @@
+{
+  "shot1": {
+    "source": "Sounds/Weapons/SMG/V2Local1.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "57b8c23cd52ca2bf2660a5c7ea4dcb78e6d3d8946a47b158ee82107ee0a8cda0",
+    "license": "CC0"
+  },
+  "shot2": {
+    "source": "Sounds/Weapons/SMG/V2Local2.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "cd26fe8a42d069df3c11f9b26a6aa4d57148919150eaabc999e8cbbb7c917635",
+    "license": "CC0"
+  },
+  "shot3": {
+    "source": "Sounds/Weapons/SMG/V2Local3.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "32c74ce12e6d40d1fb819a8c81b298a839f7f1ae2b2dd4c5a08a4ba7350c69da",
+    "license": "CC0"
+  },
+  "shot4": {
+    "source": "Sounds/Weapons/SMG/V2Local4.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "f21e3dad153b6b3faecb092ebb32e490255e93911d34d0b467883b875b5182c1",
+    "license": "CC0"
+  },
+  "enemy1": {
+    "source": "Sounds/Weapons/SMG/V2Third1.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "22822a82b470455612331a2d459e731af2399df60b71297dc32bffd512e93460",
+    "license": "CC0"
+  },
+  "enemy2": {
+    "source": "Sounds/Weapons/SMG/V2Third2.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "ee4d661ed8466c94677b4c6d6491c5174f22edd53acc21309f58f5d63c27599e",
+    "license": "CC0"
+  },
+  "enemy3": {
+    "source": "Sounds/Weapons/SMG/V2Third3.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "454cc5a10d3dd13bf452724306e991c4395b10bb4812cef239dc5d8d5b25755e",
+    "license": "CC0"
+  },
+  "enemy4": {
+    "source": "Sounds/Weapons/SMG/V2Third4.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "1c1dbc8384483f409c2b8650e71fdaf5376a21eab85007cc87997dbf56758e08",
+    "license": "CC0"
+  },
+  "magout": {
+    "source": "Sounds/Weapons/Rifle/ReloadLocal.opus",
+    "start": 0.09,
+    "duration": 0.25,
+    "sha256": "8b9e6463eebdfe72d2730d46f65239e1f6e940a615f8049883cb87aaaa4aff15",
+    "license": "CC0"
+  },
+  "magin": {
+    "source": "Sounds/Weapons/Rifle/ReloadLocal.opus",
+    "start": 0.54,
+    "duration": 0.28,
+    "sha256": "8b9e6463eebdfe72d2730d46f65239e1f6e940a615f8049883cb87aaaa4aff15",
+    "license": "CC0"
+  },
+  "bolt": {
+    "source": "Sounds/Weapons/Rifle/ReloadLocal.opus",
+    "start": 1.0,
+    "duration": 0.38,
+    "sha256": "8b9e6463eebdfe72d2730d46f65239e1f6e940a615f8049883cb87aaaa4aff15",
+    "license": "CC0"
+  },
+  "dry": {
+    "source": "Sounds/Weapons/DryFire.opus",
+    "start": 0,
+    "duration": 0.2935,
+    "sha256": "a312bcea417d215f6914a702a5745f1959029675bfd1613fc9ca6708a4f550cc",
+    "license": "CC0"
+  },
+  "shell1": {
+    "source": "Sounds/Weapons/Rifle/ShellDrop1.opus",
+    "start": 0,
+    "duration": 0.65,
+    "sha256": "5b88b388191d6c38eb357c412a0855a13cb1105f0686becb0a8f23659a18f960",
+    "license": "CC0"
+  },
+  "shell2": {
+    "source": "Sounds/Weapons/Rifle/ShellDrop2.opus",
+    "start": 0,
+    "duration": 0.32875,
+    "sha256": "d46c5e37ef1292148cc394f9a910f3de4548396a90b27d97448b3f70cf34c9c0",
+    "license": "CC0"
+  },
+  "clank": {
+    "source": "Sounds/Weapons/Spade/HitPlayer.opus",
+    "start": 0,
+    "duration": 0.75,
+    "sha256": "f0140cef6b505b078bafb42cb158f2baa392fc1e1e69c22394a2d588cddac7cd",
+    "license": "CC0"
+  },
+  "mechanism": {
+    "source": "Sounds/Weapons/SwitchLocal.opus",
+    "start": 0,
+    "duration": 0.3,
+    "sha256": "34a61a0e26952a7e14b30a5dcffc7eeeaf087018c7a9911f1ab857019f0653d4",
+    "license": "CC0"
+  },
+  "gear": {
+    "source": "Sounds/Weapons/Rifle/RaiseLocal.opus",
+    "start": 0,
+    "duration": 0.4,
+    "sha256": "f893e899438e1dd1eea0b95492ac5661171e90fc3b2e51b7570566b60b8acf2f",
+    "license": "CC0"
+  }
+}
