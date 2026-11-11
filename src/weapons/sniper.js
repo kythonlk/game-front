@@ -48,22 +48,40 @@ function SALT_SNIPER(i){
  // Scope mounts are proper split rings, not solid blocks around the optical tube.
  for(const z of [-.19,-.005]){
   box(.046,.018,.038,0,.053,z,steel);box(.025,.025,.025,0,.072,z);
-  ring(.024,.004,0,.102,z);for(const side of [-1,1]){box(.012,.013,.024,side*.027,.103,z,metal);screw(side*.034,.103,z,side);}
+  ring(.024,.004,0,.102,z);for(const side of [-1,1]){box(.012,.013,.024,side*.027,.103,z,metal);screw(side*.034,.103,z,side);screw(side*.034,.052,z,side);}
+  box(.008,.006,.028,.025,.052,z,silver);
  }
+ // Scope bridge rail, bubble-level housing and erector saddle.
+ box(.026,.006,.16,0,.065,-.098,steel);box(.034,.008,.018,-.028,.066,-.038,metal);box(.012,.005,.010,-.034,.068,-.038,silver);
+ part(new Ys(.026,.026,.064,24),0,.102,-.09,metal,chassis,[Math.PI/2,0,0]);
  tube(.021,.24,0,.102,-.10);tube(.033,.067,0,.102,-.257,metal,chassis,.022);
  tube(.034,.032,0,.102,-.301);ring(.033,.002,0,.102,-.318,steel);
+ // Threaded objective sunshade with anti-reflection honeycomb ribs and flip-up cap hinge.
+ tube(.035,.038,0,.102,-.336,metal);ring(.0352,.0016,0,.102,-.352,steel);ring(.0342,.0012,0,.102,-.324,silver);
+ box(.016,.008,.014,0,.139,-.326,rubber);part(new Ys(.0022,.0022,.020,10),0,.140,-.326,silver,chassis,[0,0,Math.PI/2]);
  tube(.028,.072,0,.102,.05);tube(.030,.033,0,.102,.095,rubber);
+ // Magnification throw ring with raised power fin and diopter fast-focus lock ring.
+ tube(.0295,.022,0,.102,.028,steel);ring(.0302,.0014,0,.102,.016,silver);
+ for(let j=0;j<18;j++){const a=j*Math.PI/9;box(.0022,.0022,.018,Math.cos(a)*.0298,.102+Math.sin(a)*.0298,.028,metal,chassis,[0,0,a]);}
+ box(.006,.019,.009,-.024,.124,.028,steel,chassis,[0,0,.58]);tube(.0038,.010,-.031,.133,.028,silver);
  for(let j=0;j<9;j++)ring(.030,.0009,0,.102,.081+j*.003,steel);
- // Focus collar and knurled elevation/windage turrets.
+ // Focus collar, parallax drum (left), and knurled elevation/windage turrets with witness caps.
  tube(.026,.031,0,.102,-.207,rubber);
  for(let j=0;j<22;j++){const a=j*Math.PI/11;box(.002,.002,.027,Math.cos(a)*.026,.102+Math.sin(a)*.026,-.207,steel,chassis,[0,0,a]);}
- part(new Ys(.019,.019,.026,24),0,.136,-.09,metal);
- part(new Ys(.018,.018,.025,24),.034,.102,-.09,metal,chassis,[0,0,Math.PI/2]);
- for(let j=0;j<20;j++){const a=j*Math.PI/10;box(.002,.017,.002,Math.cos(a)*.019,.138,-.09+Math.sin(a)*.019,steel);}
- box(.002,.001,.012,0,.150,-.09,silver);box(.012,.002,.001,.047,.102,-.09,silver);
+ part(new Ys(.019,.019,.026,24),0,.136,-.09,metal);part(new Ys(.015,.015,.006,20),0,.150,-.09,steel);
+ part(new Ys(.018,.018,.025,24),.034,.102,-.09,metal,chassis,[0,0,Math.PI/2]);part(new Ys(.014,.014,.005,20),.048,.102,-.09,steel,chassis,[0,0,Math.PI/2]);
+ part(new Ys(.016,.016,.022,22),-.033,.102,-.09,metal,chassis,[0,0,Math.PI/2]);part(new Ys(.012,.012,.005,18),-.045,.102,-.09,silver,chassis,[0,0,Math.PI/2]);
+ for(let j=0;j<20;j++){
+  const a=j*Math.PI/10;
+  box(.002,.017,.002,Math.cos(a)*.019,.138,-.09+Math.sin(a)*.019,steel);
+  box(.016,.002,.002,.036,.102+Math.cos(a)*.018,-.09+Math.sin(a)*.018,steel);
+  if(j%2===0)box(.014,.002,.002,-.034,.102+Math.cos(a)*.016,-.09+Math.sin(a)*.016,steel);
+ }
+ ring(.0182,.001,0,.127,-.09,silver);
+ box(.002,.001,.012,0,.1535,-.09,silver);box(.012,.002,.001,.051,.102,-.09,silver);box(.010,.002,.001,-.048,.102,-.09,rubber);
  // Recessed glass shares the PAC-9's view-dependent coating, without its red-dot emitter.
  ring(.0275,.0015,0,.102,.115,steel);
- for(const [radius,z] of [[.026,.114],[.029,-.318]]){
+ for(const [radius,z] of [[.026,.114],[.029,-.352]]){
   tube(radius,.002,0,.102,z-.004,rubber);
   const outline=Array.from({length:40},(_,j)=>{const a=j*Math.PI/20;return[Math.cos(a)*radius,.102+Math.sin(a)*radius];});
   const lens=U_(outline,-z);lens.material.fragmentShader=lens.material.fragmentShader.replace(' + retCol;',';');root.add(lens);
@@ -92,7 +110,29 @@ function SALT_SNIPER(i){
  const flash=N_();flash.position.set(0,.012,-1.04);flash.visible=false;root.add(flash);
  root.traverse(o=>{o.layers.set(zc);if(o.isMesh){o.frustumCulled=false;o.castShadow=false;o.receiveShadow=true;}});
  const modelInfo={meshes:0,tris:0};root.traverse(o=>{if(o.isMesh){modelInfo.meshes++;modelInfo.tris+=Kc(o.geometry);}});
- const scope=document.createElement('div');scope.className='sniper-scope';scope.hidden=true;scope.innerHTML='<div class="scope-glass"><div class="scope-reticle"></div><span>SR-7 · 4×</span></div>';const ui=document.getElementById('ui');ui.appendChild(scope);
+ const scope=document.createElement('div');scope.className='sniper-scope';scope.hidden=true;
+ const ticks=[];
+ for(let m=-6;m<=6;m++){
+  if(!m)continue;
+  const p=200+m*22,maj=m%2===0,h=maj?7:3.5;
+  ticks.push(`<line x1="${p}" y1="${200-h}" x2="${p}" y2="${200+h}" stroke="#121c21" stroke-width="${maj?1.3:.9}"/>`);
+  if(m>0||m>=-4)ticks.push(`<line x1="${200-h}" y1="${p}" x2="${200+h}" y2="${p}" stroke="#121c21" stroke-width="${maj?1.3:.9}"/>`);
+  if(maj&&Math.abs(m)<=4)ticks.push(`<text x="${p}" y="218" fill="#162228" font-size="8" font-family="monospace" text-anchor="middle">${Math.abs(m)}</text>`);
+  if(m>0&&m<=5){
+   const y=200+m*22;
+   for(let w=1;w<=Math.min(m+1,4);w++){
+    const dx=w*11;
+    ticks.push(`<circle cx="${200-dx}" cy="${y}" r="1.2" fill="#162228" opacity=".8"/><circle cx="${200+dx}" cy="${y}" r="1.2" fill="#162228" opacity=".8"/>`);
+   }
+   if(maj)ticks.push(`<text x="218" y="${y+3}" fill="#162228" font-size="8" font-family="monospace">${m}</text>`);
+  }
+ }
+ for(let step=1;step<=4;step++){
+  const sx=278+step*15,sy=274-step*7,sh=18-step*2.5;
+  ticks.push(`<line x1="${sx}" y1="${sy}" x2="${sx}" y2="${sy-sh}" stroke="#ffb347" stroke-width="1" opacity=".62"/><line x1="${sx-4}" y1="${sy-sh}" x2="${sx+4}" y2="${sy-sh}" stroke="#ffb347" stroke-width="1" opacity=".62"/><text x="${sx}" y="${sy+9}" fill="#ffb347" opacity=".7" font-size="7" font-family="monospace" text-anchor="middle">${step+1}00</text>`);
+ }
+ scope.innerHTML=`<div class="scope-glass"><svg class="scope-svg" viewBox="0 0 400 400" aria-hidden="true"><circle cx="200" cy="200" r="186" fill="none" stroke="rgba(255,179,71,.18)" stroke-width="1" stroke-dasharray="3 9"/><circle cx="200" cy="200" r="56" fill="none" stroke="rgba(18,28,33,.45)" stroke-width=".9" stroke-dasharray="6 4"/><path d="M182 200 H148 M218 200 H252 M200 182 V148 M200 218 V252" stroke="#ff9d3b" stroke-width="1.2" opacity=".65"/>${ticks.join('')}</svg><div class="scope-reticle"></div><div class="scope-level"></div><div class="scope-hud"><div><b>MIL-STD · FFP</b>WIND 0.2R · ELEV +1.4</div><div style="text-align:right"><b>OPTIC 4.0×32</b>PARALLAX 300M</div></div><span>SR-7 · 4×</span></div>`;
+ const ui=document.getElementById('ui');ui.appendChild(scope);
  let visible=false,time=0,cool=0,reload=0,reloadPhase=0,autoReload=false,previous=false,recoil=0,boltSound=false,swayX=0,swayY=0;
  const origin=new W,dir=new W,muzzle=new W,end=new W;
  const w={name:'SR-7 · SNIPER',ammo:5,magSize:5,reserve:30,damage:110,rpm:48,ads:0,spread:.028,state:'idle',root,debug:{},info:modelInfo,

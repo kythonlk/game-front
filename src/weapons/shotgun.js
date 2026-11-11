@@ -3,79 +3,110 @@ export default function createPart({Bf,Ci,He,Kc,N_,Qe,Qt,Ve,Vn,Vv,W,Wi,Ys,Zn,bi,
 function SALT_SHOTGUN(i){
  const root=new wt;root.name='viewmodel-breacher12';i.camera.add(root);
  const make=(name,c,r,m,k)=>{const mat=new Qt({color:new Ve(...c),roughness:r,metalness:m,vertexColors:true});mat.name=name;Bf(mat,k);return mat;};
- const metal=make('sg-anodized',[.013,.016,.018],.43,.65,0),steel=make('sg-steel',[.04,.045,.048],.4,.8,1),poly=make('sg-polymer',[.105,.078,.045],.68,.02,2),rubber=make('sg-rubber',[.009,.01,.011],.82,0,2),brass=i.mats.get('brass',{triplanar:true,vertexColors:true,scale:4}),silver=make('sg-machined',[.19,.21,.22],.34,.83,1),shellRed=make('sg-shell-red',[.26,.034,.021],.63,.03,2),sight=make('sg-sight-mark',[.63,.66,.59],.48,.1,2);
+ const metal=make('sg-anodized',[.013,.016,.018],.43,.65,0),steel=make('sg-steel',[.04,.045,.048],.4,.8,1),poly=make('sg-polymer',[.105,.078,.045],.68,.02,2),rubber=make('sg-rubber',[.009,.01,.011],.82,0,2),brass=i.mats.get('brass',{triplanar:true,vertexColors:true,scale:4}),silver=make('sg-machined',[.19,.21,.22],.34,.83,1),shellRed=make('sg-shell-red',[.26,.034,.021],.63,.03,2),sight=make('sg-sight-mark',[.63,.66,.59],.48,.1,2),fiber=make('sg-fiber-optic',[.95,.24,.08],.22,.05,2);
  const body=new wt,pump=new wt,bolt=new wt;root.add(body,pump,bolt);
  function part(geo,x,y,z,mat=metal,parent=body,rot){const mesh=new Qe(geo,mat);mesh.position.set(x,y,z);if(rot)mesh.rotation.set(...rot);const colors=new Float32Array(geo.attributes.position.count*3);for(let n=0;n<geo.attributes.normal.count;n++){const shade=.87+.13*Math.max(0,geo.attributes.normal.getY(n));colors.set([shade,shade,shade],n*3);}geo.setAttribute('color',new He(colors,3));parent.add(mesh);return mesh;}
  const box=(w,h,d,x,y,z,mat=metal,parent=body,rot)=>part(Wi(w,h,d,Math.min(.003,w*.15,h*.15,d*.15)),x,y,z,mat,parent,rot);
  const tube=(r,l,x,y,z,mat=metal,parent=body)=>part(new Ys(r,r,l,18),x,y,z,mat,parent,[Math.PI/2,0,0]);
  const ring=(radius,wire,x,y,z,mat=steel,parent=body,rot)=>part(new Ci(radius,wire,6,24),x,y,z,mat,parent,rot);
  function screw(x,y,z,side=1,parent=body){part(new Ys(.0032,.0032,.002,6),x,y,z,silver,parent,[0,0,side*Math.PI/2]);box(.001,.0012,.004,x+side*.0012,y,z,rubber,parent);}
- // Machined action with contrasting side plates, recessed port and a visible bolt.
+ // Machined action with chamfered upper bridge, Picatinny receiver rail, recessed port, shell lifter and visible bolt.
  box(.062,.072,.235,0,0,-.045);box(.066,.018,.23,0,-.043,-.05,steel);
+ box(.048,.008,.215,0,.038,-.045,steel);box(.028,.006,.195,0,.044,-.045,metal);
+ for(let n=0;n<14;n++)box(.034,.004,.005,0,.048,.038-n*.013,steel);
+ // Bottom loading port recess and silver shell carrier spoon.
+ box(.032,.005,.105,0,-.051,-.062,rubber);box(.022,.003,.086,0,-.049,-.060,silver);
  for(const side of [-1,1]){
   box(.002,.042,.211,side*.0318,-.004,-.045,steel);
   box(.002,.005,.19,side*.033,.028,-.045,silver);
-  for(const z of [-.13,.024])screw(side*.034,-.023,z,side);
+  box(.005,.006,.215,side*.027,.034,-.045,metal,body,[0,0,side*.6]);
+  for(const z of [-.13,-.05,.024])screw(side*.034,-.023,z,side);
  }
  box(.002,.027,.093,.034,.008,-.055,rubber);
  box(.004,.004,.103,.035,.024,-.055,metal);box(.004,.004,.103,.035,-.008,-.055,metal);
  tube(.009,.071,.032,.008,-.055,silver,bolt);
- box(.004,.009,.019,.037,.011,-.017,silver,bolt);
+ box(.003,.004,.052,.036,.010,-.055,steel,bolt);
+ // Knurled tactical bolt handle on the bolt carrier.
+ part(new Ys(.0042,.0042,.018,12),.042,.011,-.017,steel,bolt,[0,0,Math.PI/2]);
+ part(new Ys(.0068,.0058,.012,14),.051,.011,-.017,silver,bolt,[0,0,Math.PI/2]);
+ for(let n=0;n<4;n++)ring(.0066,.0007,.047+n*.0026,.011,-.017,rubber,bolt,[0,Math.PI/2,0]);
  box(.009,.009,.021,-.035,-.027,.045,steel);box(.012,.004,.018,-.041,-.021,.045,rubber);
- // Barrel, magazine tube and a slotted upper shroud / sight rib.
+ // Barrel, magazine tube, dual action bars and a perforated tactical heatshield / ventilated rib.
  tube(.016,.40,0,.012,-.355,steel);tube(.018,.34,0,-.027,-.32);
- tube(.021,.017,0,-.027,-.50,steel);tube(.018,.006,0,-.027,-.511,silver);
+ tube(.021,.022,0,-.027,-.50,steel);tube(.018,.006,0,-.027,-.513,silver);
+ for(let n=0;n<12;n++){const a=n*Math.PI/6;box(.0016,.0016,.018,Math.cos(a)*.021,-.027+Math.sin(a)*.021,-.50,metal,body,[0,0,a]);}
+ part(new Ys(.0185,.0185,.31,20,1,true),0,.015,-.34,metal,body,[Math.PI/2,0,0]);
  for(const side of [-1,1]){
   box(.005,.010,.32,side*.019,.027,-.345,metal);
-  for(let n=0;n<8;n++)box(.005,.016,.008,side*.019,.028,-.197-n*.042,steel);
+  for(let n=0;n<9;n++){
+   box(.005,.016,.008,side*.019,.028,-.188-n*.038,steel);
+   box(.004,.006,.014,side*.0175,.020,-.205-n*.034,rubber);
+  }
  }
- box(.010,.004,.34,0,.040,-.345,steel);
- for(let n=0;n<8;n++)box(.008,.012,.009,0,.033,-.19-n*.044,steel);
- // A hollow muzzle and barrel clamp replace the old flat end cap.
- part(new Ys(.022,.022,.040,24,1,true),0,.012,-.575,steel,body,[Math.PI/2,0,0]);
- part(new Ys(.011,.011,.032,24,1,true),0,.012,-.577,rubber,body,[Math.PI/2,0,0]);
- ring(.0165,.0055,0,.012,-.596,steel);tube(.0108,.001,0,.012,-.559,rubber);
- for(let n=0;n<6;n++){const a=n*Math.PI/3;box(.004,.004,.018,Math.cos(a)*.021,.012+Math.sin(a)*.021,-.575,rubber,body,[0,0,a]);}
- ring(.018,.003,0,.012,-.473);ring(.020,.003,0,-.027,-.473);
- for(const side of [-1,1]){box(.006,.037,.012,side*.020,-.008,-.473,steel);screw(side*.024,-.008,-.473,side);}
- // Protected iron sights keep the original sight line, with a bright front bead.
- box(.01,.026,.019,0,.039,-.548);box(.003,.004,.004,0,.054,-.545,sight);
- box(.042,.014,.028,0,.046,.033);box(.006,.015,.025,-.016,.058,.033);box(.006,.015,.025,.016,.058,.033);
- ring(.007,.0015,0,.060,.031,steel);box(.006,.009,.006,0,.048,.031,steel);
- for(const side of [-1,1])box(.002,.006,.002,side*.010,.058,.047,sight);
- // Sculpted pump with front/rear stops, ribbed grip and fastener plates.
+ box(.012,.004,.34,0,.040,-.345,steel);
+ for(let n=0;n<9;n++)box(.009,.012,.009,0,.033,-.185-n*.040,steel);
+ // Crowned standoff breacher choke with Aggressive teeth and radial porting replaces the plain end cap.
+ part(new Ys(.0225,.0215,.046,24,1,true),0,.012,-.578,steel,body,[Math.PI/2,0,0]);
+ part(new Ys(.011,.011,.036,24,1,true),0,.012,-.580,rubber,body,[Math.PI/2,0,0]);
+ ring(.0165,.0055,0,.012,-.600,steel);ring(.022,.0016,0,.012,-.562,silver);tube(.0108,.001,0,.012,-.559,rubber);
+ for(let n=0;n<6;n++){
+  const a=n*Math.PI/3;
+  box(.004,.004,.018,Math.cos(a)*.0215,.012+Math.sin(a)*.0215,-.576,rubber,body,[0,0,a]);
+  box(.0042,.0042,.008,Math.cos(a)*.019,.012+Math.sin(a)*.019,-.603,silver,body,[0,0,a]);
+ }
+ // Heavy barrel-to-magazine clamp with side Picatinny accessory rail & QD cup.
+ ring(.0185,.0035,0,.012,-.473);ring(.0205,.0035,0,-.027,-.473);
+ for(const side of [-1,1]){
+  box(.007,.040,.018,side*.020,-.008,-.473,steel);
+  screw(side*.025,.002,-.473,side);screw(side*.025,-.018,-.473,side);
+ }
+ for(let n=0;n<4;n++)box(.005,.012,.004,.025,-.008,-.482+n*.006,metal);
+ ring(.0055,.0015,-.025,-.008,-.473,silver,body,[0,Math.PI/2,0]);
+ // Protected ghost-ring iron sights with windage drum and glowing fiber-optic front pipe.
+ box(.012,.026,.024,0,.039,-.548);box(.003,.014,.022,-.007,.046,-.548,steel);box(.003,.014,.022,.007,.046,-.548,steel);
+ part(new Ys(.0018,.0018,.014,10),0,.053,-.546,fiber,body,[Math.PI/2,0,0]);box(.0032,.0042,.003,0,.053,-.539,sight);
+ box(.044,.014,.032,0,.046,.033);box(.006,.016,.026,-.016,.058,.033);box(.006,.016,.026,.016,.058,.033);
+ part(new Ys(.0055,.0055,.006,14),.022,.054,.033,silver,body,[0,0,Math.PI/2]);
+ ring(.0075,.0018,0,.060,.031,steel);box(.006,.009,.006,0,.048,.031,steel);
+ for(const side of [-1,1])box(.0024,.006,.002,side*.010,.058,.047,sight);
+ // Sculpted tactical pump fore-end with dual steel action bars, hand-stop flanges and deep grip ribs.
+ for(const side of [-1,1])box(.003,.007,.24,side*.022,-.020,-.205,silver,pump);
  box(.064,.061,.19,0,-.027,-.315,poly,pump);
- for(let n=0;n<11;n++)box(.068,.004,.008,0,-.057,-.235-n*.016,rubber,pump);
+ for(let n=0;n<11;n++)box(.068,.005,.009,0,-.057,-.235-n*.016,rubber,pump);
  for(const side of [-1,1]){
   box(.002,.035,.154,side*.033,-.027,-.315,rubber,pump);
   for(let n=0;n<9;n++)box(.004,.036,.005,side*.034,-.025,-.25-n*.017,poly,pump);
   for(const z of [-.238,-.392])screw(side*.035,-.029,z,side,pump);
  }
- box(.070,.009,.014,0,-.054,-.223,poly,pump);box(.070,.012,.013,0,-.051,-.407,poly,pump);
- // Grip and trigger guard retain their original glove anchors.
+ box(.070,.012,.016,0,-.054,-.222,poly,pump);box(.070,.014,.015,0,-.051,-.408,poly,pump);
+ // Grip and trigger guard retain their original glove anchors, with cross-bolt safety and beaver-tail tang.
  box(.042,.095,.056,0,-.092,.065,poly,body,[-.22,0,0]);
  for(const side of [-1,1]){box(.002,.060,.041,side*.022,-.093,.063,rubber,body,[-.22,0,0]);for(let n=0;n<7;n++)box(.003,.002,.034,side*.023,-.067-n*.008,.063,poly,body,[-.22,0,0]);}
  box(.038,.005,.074,0,-.082,-.006,steel);box(.038,.033,.006,0,-.067,-.043,steel);box(.007,.027,.007,0,-.06,0,steel,body,[-.35,0,0]);
+ part(new Ys(.0036,.0036,.042,10),0,-.048,.028,silver,body,[0,0,Math.PI/2]);part(new Ys(.0038,.0038,.003,10),-.021,-.048,.028,shellRed,body,[0,0,Math.PI/2]);
  box(.009,.009,.007,0,-.041,.048,metal);box(.004,.002,.009,0,-.036,.049,shellRed);
- // Layered stock, cheek pad, textured butt pad and sling hardware.
+ // Layered stock, adjustable cheek riser with dual guide posts, textured butt pad and sling hardware.
  box(.065,.09,.19,0,-.035,.208,poly);box(.057,.018,.14,0,.018,.205,poly);
  box(.062,.012,.125,0,.031,.215,rubber);box(.068,.009,.033,0,-.077,.139,steel);
+ for(const z of [.175,.245])part(new Ys(.005,.005,.028,12),0,.008,z,silver);
  for(const side of [-1,1]){
   box(.002,.038,.115,side*.033,-.031,.212,rubber);
   for(let n=0;n<8;n++)box(.003,.025,.003,side*.034,-.030,.167+n*.012,poly);
-  screw(side*.034,-.035,.264,side);
+  screw(side*.034,-.035,.264,side);screw(side*.034,-.012,.175,side);
   ring(.007,.0016,side*.035,-.062,.271,steel,body,[0,Math.PI/2,0]);
  }
  box(.069,.105,.025,0,-.04,.315,rubber);
  for(let n=0;n<6;n++)box(.07,.003,.027,0,-.08+n*.016,.315,metal);
- // Four distinct red hulls sit vertically in a receiver-mounted carrier.
- box(.007,.048,.142,-.038,-.004,-.068,rubber);box(.004,.007,.146,-.043,.024,-.068,metal);
- for(let n=0;n<4;n++){
-  const z=-.119+n*.034;
-  part(new Ys(.0086,.0086,.045,18),-.047,-.005,z,shellRed);
-  part(new Ys(.0091,.0091,.009,18),-.047,.022,z,brass);
-  part(new Ys(.003,.003,.001,12),-.047,.027,z,steel);
-  box(.010,.004,.020,-.046,-.018,z,rubber);
+ // Six-shell side saddle carrier with brass rims, primers and retention clips.
+ box(.008,.050,.174,-.038,-.004,-.056,rubber);box(.004,.008,.178,-.043,.024,-.056,metal);
+ for(const z of [-.125,-.056,.013])screw(-.042,.024,z,-1);
+ for(let n=0;n<6;n++){
+  const z=-.128+n*.0285;
+  part(new Ys(.0084,.0084,.046,18),-.047,-.005,z,shellRed);
+  part(new Ys(.0090,.0090,.010,18),-.047,.022,z,brass);
+  part(new Ys(.0096,.0096,.002,18),-.047,.027,z,brass);
+  part(new Ys(.0032,.0032,.0012,12),-.047,.0282,z,silver);
+  box(.011,.005,.018,-.046,-.016,z,rubber);
  }
  for(const parent of [body,pump,bolt]){const batches=new Map;for(const mesh of [...parent.children]){mesh.updateMatrix();const g=mesh.geometry.index?mesh.geometry.toNonIndexed():mesh.geometry.clone();g.applyMatrix4(mesh.matrix);if(!batches.has(mesh.material))batches.set(mesh.material,[]);batches.get(mesh.material).push(g);parent.remove(mesh);mesh.geometry.dispose();}for(const [mat,geos] of batches){parent.add(new Qe(sa(geos,false),mat));geos.forEach(g=>g.dispose());}}
  // Subdued stamped receiver markings are separate from the batched metalwork.

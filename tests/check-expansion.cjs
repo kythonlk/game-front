@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  try{
  const page=await browser.newPage({viewport:{width:1100,height:800}});page.on('pageerror',e=>console.log('PAGEERROR',e.message));
- for(const map of ['berth4','crossdock']){
+ for(const map of ['berth4','crossdock','frostpier']){
   await page.goto('http://127.0.0.1:8087/index.html?map='+map+'&mission=4&q=low&noaudio=1');await page.waitForFunction(()=>window.__ready,null,{timeout:90000});
   await page.evaluate(async()=>{__G.renderer.setAnimationLoop(null);await __G.assets.prepareMode('foot');await __G.assets.prepareMode('fpv');document.getElementById('boot').remove();});
   assert.equal(await page.locator('button[data-pilot="fpv"]').getAttribute('aria-pressed'),'true');

@@ -1,47 +1,93 @@
 // Loaded on demand by runtime.js. Dependencies share one engine instance.
-export default function createPart({Bf,He,Kc,N_,Qe,Qt,Ve,Vn,Vv,W,Wi,Yo,Ys,Zn,bi,i0,kn,rn,sa,wt,xs,zc}){
+export default function createPart({Bf,Ci,He,Kc,N_,Qe,Qt,Ve,Vn,Vv,W,Wi,Yo,Ys,Zn,bi,i0,kn,rn,sa,wt,xs,zc}){
 function SALT_AUTO_SHOTGUN(i){
  const root=new wt;root.name='viewmodel-autoshotgun';i.camera.add(root);
  const make=(name,color,roughness,metalness,finish)=>{const m=new Qt({color:new Ve(...color),roughness,metalness,vertexColors:true});m.name=name;Bf(m,finish);return m;};
- const steel=make('a12-receiver',[.055,.063,.069],.42,.78,0),edge=make('a12-machined',[.12,.14,.15],.35,.84,1),dark=make('a12-recess',[.008,.011,.014],.7,.24,1),polymer=make('a12-olive-polymer',[.095,.108,.076],.82,.03,2),rubber=make('a12-rubber',[.021,.027,.024],.94,0,2),sight=make('a12-sight',[.72,.81,.62],.55,.05,2);
+ const steel=make('a12-receiver',[.055,.063,.069],.42,.78,0),edge=make('a12-machined',[.12,.14,.15],.35,.84,1),dark=make('a12-recess',[.008,.011,.014],.7,.24,1),polymer=make('a12-olive-polymer',[.095,.108,.076],.82,.03,2),rubber=make('a12-rubber',[.021,.027,.024],.94,0,2),sight=make('a12-sight',[.72,.81,.62],.55,.05,2),shellRed=make('a12-shell-red',[.28,.038,.024],.58,.04,2),fiber=make('a12-fiber',[.95,.32,.10],.22,.05,2),brass=i.mats.get('brass',{triplanar:true,vertexColors:true,scale:4});
  const body=new wt,bolt=new wt,magazine=new wt;root.add(body,bolt,magazine);const magHome=new W(0,-.114,-.128);magazine.position.copy(magHome);magazine.rotation.x=.08;
- function part(geo,x,y,z,mat=steel,parent=body,rotation){const mesh=new Qe(geo,mat);mesh.position.set(x,y,z);if(rotation)mesh.rotation.set(...rotation);const colors=new Float32Array(geo.attributes.position.count*3);colors.fill(.96);geo.setAttribute('color',new He(colors,3));parent.add(mesh);return mesh;}
+ function part(geo,x,y,z,mat=steel,parent=body,rotation){const mesh=new Qe(geo,mat);mesh.position.set(x,y,z);if(rotation)mesh.rotation.set(...rotation);const colors=new Float32Array(geo.attributes.position.count*3),normals=geo.attributes.normal;for(let n=0;n<normals.count;n++){const shade=.86+.14*Math.max(0,normals.getY(n));colors.set([shade,shade,shade],n*3);}geo.setAttribute('color',new He(colors,3));parent.add(mesh);return mesh;}
  const box=(w,h,d,x,y,z,mat=steel,parent=body,rot)=>part(Wi(w,h,d,Math.min(.003,w*.15,h*.15,d*.15)),x,y,z,mat,parent,rot);
  const tube=(r,len,x,y,z,mat=edge,parent=body)=>part(new Ys(r,r,len,18),x,y,z,mat,parent,[Math.PI/2,0,0]);
- // Three-piece receiver surrounds a visible open ejection port and moving bolt.
+ const ring=(radius,wire,x,y,z,mat=steel,parent=body,rot)=>part(new Ci(radius,wire,6,24),x,y,z,mat,parent,rot);
+ // Three-piece machined receiver with upper bevels, brass shell deflector, open ejection port and moving bolt.
  box(.066,.076,.092,0,.006,.017);box(.066,.076,.105,0,.006,-.154);
  box(.008,.076,.079,-.029,.006,-.068);box(.066,.014,.079,0,-.025,-.068);
  box(.066,.013,.079,0,.039,-.068);box(.008,.020,.079,.029,-.012,-.068);
- box(.050,.043,.080,0,.010,-.063,dark,bolt);box(.003,.029,.054,.030,.014,-.065,edge,bolt);
- box(.036,.008,.012,.042,.015,-.062,edge,bolt);tube(.0045,.018,.059,.016,-.065,dark,bolt);
- box(.061,.031,.130,0,-.043,-.043,polymer);box(.072,.016,.071,0,-.063,-.128,steel);
- // Substantial barrel, short ventilated shroud, compensator and dark bore.
- tube(.014,.370,0,.006,-.329);tube(.018,.048,0,.006,-.514,steel);tube(.0114,.002,0,.006,-.539,dark);
- tube(.008,.205,0,.040,-.293,dark);box(.069,.061,.180,0,-.003,-.304,polymer);
+ // Angled shell deflector behind the ejection port and recessed side lightening cuts.
+ box(.010,.024,.018,.034,.014,-.021,steel,body,[0,.38,0]);
  for(const side of [-1,1]){
-  box(.004,.035,.184,side*.034,-.001,-.302,steel);
-  for(let n=0;n<7;n++){box(.005,.012,.014,side*.036,.008,-.372+n*.023,dark);box(.005,.005,.012,side*.036,-.018,-.372+n*.023,edge);}
-  for(let n=0;n<3;n++)box(.002,.019,.006,side*.018,.007,-.527+n*.010,dark);
-  for(const z of [-.167,.032])part(new Ys(.004,.004,.003,12),side*.034,.005,z,edge,body,[0,0,Math.PI/2]);
+  box(.005,.006,.268,side*.030,.041,-.068,steel,body,[0,0,side*.65]);
+  box(.002,.016,.072,side*.0335,.012,-.154,dark);
+  box(.002,.004,.255,side*.0336,-.018,-.068,edge);
+  // Ambidextrous fire-control selector lever and witness markings.
+  part(new Ys(.0045,.0045,.003,12),side*.034,-.024,.024,edge,body,[0,0,Math.PI/2]);
+  box(.004,.006,.022,side*.036,-.021,.017,dark,body,[.32,0,0]);
  }
- // Continuous optic rail and low protected iron sights.
+ // Fluted bolt carrier, extractor claw and knurled reciprocating charging handle.
+ box(.050,.043,.080,0,.010,-.063,dark,bolt);box(.003,.029,.054,.030,.014,-.065,edge,bolt);
+ for(let n=0;n<3;n++)box(.0015,.004,.044,.0315,.006+n*.007,-.065,dark,bolt);
+ box(.036,.008,.012,.042,.015,-.062,edge,bolt);tube(.0052,.018,.059,.016,-.065,dark,bolt);
+ part(new Ys(.0062,.0052,.016,14),.062,.016,-.065,edge,bolt,[0,0,Math.PI/2]);
+ box(.061,.031,.130,0,-.043,-.043,polymer);box(.074,.018,.076,0,-.063,-.128,steel);
+ box(.078,.006,.080,0,-.071,-.128,edge);
+ // Heavy barrel, adjustable gas block with knurled regulator plug, perforated shroud, multi-port brake and dark bore.
+ tube(.014,.370,0,.006,-.329);tube(.020,.058,0,.006,-.516,steel);tube(.017,.052,0,.006,-.516,edge);tube(.0114,.002,0,.006,-.546,dark);
+ // Gas block assembly and piston tube above the barrel.
+ tube(.009,.225,0,.038,-.298,dark);box(.028,.044,.042,0,.024,-.422,steel);
+ tube(.0105,.022,0,.038,-.438,edge);part(new Ys(.0075,.0075,.012,12),0,.038,-.450,steel,body,[Math.PI/2,0,0]);
+ for(let n=0;n<6;n++){const a=n*Math.PI/3;box(.002,.002,.010,Math.cos(a)*.008,.038+Math.sin(a)*.008,-.450,edge,body,[0,0,a]);}
+ // Octagonal polymer/steel fore-end with side M-LOK slots, lower accessory rail and angled hand stop.
+ box(.069,.061,.188,0,-.003,-.304,polymer);box(.030,.008,.168,0,-.036,-.304,dark);
+ for(let n=0;n<12;n++)box(.034,.004,.005,0,-.040,-.232-n*.013,edge);
+ box(.026,.024,.032,0,-.048,-.382,polymer,body,[.35,0,0]);
+ for(const side of [-1,1]){
+  box(.004,.035,.186,side*.034,-.001,-.302,steel);
+  for(let n=0;n<7;n++){box(.005,.012,.014,side*.036,.008,-.372+n*.023,dark);box(.005,.005,.012,side*.036,-.018,-.372+n*.023,edge);}
+  // Side Picatinny rail sections near the front of the handguard.
+  for(let n=0;n<5;n++)box(.005,.012,.005,side*.037,-.002,-.385+n*.010,edge);
+  // Muzzle brake gill vents and standoff crown teeth.
+  for(let n=0;n<3;n++)box(.004,.022,.007,side*.019,.006,-.529+n*.011,dark);
+  for(const z of [-.167,-.082,.032])part(new Ys(.004,.004,.003,12),side*.034,.005,z,edge,body,[0,0,Math.PI/2]);
+ }
+ for(let n=0;n<6;n++){const a=n*Math.PI/3;box(.0038,.0038,.008,Math.cos(a)*.0175,.006+Math.sin(a)*.0175,-.546,edge,body,[0,0,a]);}
+ // Continuous optic rail and heavy folding ghost-ring iron sights with fiber-optic front post.
  box(.032,.010,.351,0,.051,-.139,dark);
  for(let n=0;n<29;n++)box(.042,.006,.006,0,.058,.023-n*.012,edge);
- box(.034,.007,.021,0,.065,.007,dark);box(.007,.016,.017,-.0135,.074,.007,dark);box(.007,.016,.017,.0135,.074,.007,dark);
- box(.003,.003,.001,-.0135,.078,.016,sight);box(.003,.003,.001,.0135,.078,.016,sight);
- box(.007,.018,.009,0,.073,-.307,dark);box(.003,.005,.002,0,.079,-.301,sight);
- for(const side of [-1,1])box(.004,.024,.014,side*.016,.073,-.307,steel);
- // Adjustable skeleton stock, shoulder pad, angled pistol grip and open guard.
- box(.035,.031,.160,0,-.001,.139,dark);box(.055,.025,.114,0,.017,.158,polymer);box(.055,.018,.108,0,-.053,.161,polymer,body,[-.12,0,0]);
- box(.060,.103,.025,0,-.021,.218,polymer);box(.063,.105,.012,0,-.021,.235,rubber);
+ box(.038,.008,.026,0,.065,.007,dark);box(.007,.017,.019,-.0135,.074,.007,dark);box(.007,.017,.019,.0135,.074,.007,dark);
+ part(new Ys(.0055,.0055,.046,12),0,.066,.007,edge,body,[0,0,Math.PI/2]);
+ ring(.0068,.0016,0,.076,.007,steel);box(.005,.008,.005,0,.066,.007,steel);
+ box(.003,.003,.001,-.0135,.078,.017,sight);box(.003,.003,.001,.0135,.078,.017,sight);
+ box(.036,.008,.024,0,.064,-.307,dark);box(.006,.015,.011,0,.071,-.307,dark);
+ part(new Ys(.0018,.0018,.012,10),0,.077,-.305,fiber,body,[Math.PI/2,0,0]);box(.003,.004,.002,0,.077,-.299,sight);
+ for(const side of [-1,1])box(.004,.024,.016,side*.016,.073,-.307,steel);
+ // Adjustable skeleton stock, cheek riser, folding hinge knuckle, shoulder pad, angled pistol grip and open guard.
+ box(.044,.048,.026,0,.002,.068,steel);part(new Ys(.006,.006,.052,12),-.022,.002,.068,edge);
+ box(.035,.031,.160,0,-.001,.139,dark);box(.055,.025,.114,0,.017,.158,polymer);box(.058,.007,.104,0,.031,.158,rubber);
+ box(.055,.018,.108,0,-.053,.161,polymer,body,[-.12,0,0]);
+ box(.060,.103,.025,0,-.021,.218,polymer);box(.063,.105,.014,0,-.021,.235,rubber);
  for(let n=0;n<8;n++)box(.064,.002,.002,0,-.060+n*.011,.242,polymer);
  box(.039,.104,.050,0,-.101,.034,polymer,body,[-.24,0,0]);box(.041,.077,.041,0,-.104,.039,rubber,body,[-.24,0,0]);
  for(const side of [-1,1])for(let n=0;n<6;n++)box(.003,.003,.033,side*.021,-.078-n*.009,.036,polymer);
  box(.006,.007,.064,-.022,-.084,-.018,dark);box(.006,.007,.064,.022,-.084,-.018,dark);box(.044,.039,.007,0,-.066,-.047,dark);
  box(.007,.027,.008,0,-.064,-.012,edge,body,[-.23,0,0]);box(.012,.007,.028,-.039,-.006,.003,dark,body,[0,0,-.25]);
- // Broad ten-shell box magazine with ribs, feed lips and a separate base plate.
- box(.048,.142,.074,0,-.010,0,dark,magazine);box(.054,.013,.082,0,-.085,.004,polymer,magazine);
- for(const side of [-1,1]){box(.005,.120,.068,side*.024,-.009,0,polymer,magazine);for(let n=0;n<4;n++)box(.002,.101,.004,side*.027,-.009,-.025+n*.016,edge,magazine);box(.003,.012,.068,side*.021,.065,0,steel,magazine);}
+ // Broad ten-shell box magazine with waffle ribs, witness window showing red 12GA shells & brass rims, feed lips and base plate.
+ box(.048,.142,.074,0,-.010,0,dark,magazine);box(.056,.014,.084,0,-.085,.004,polymer,magazine);box(.058,.006,.086,0,-.092,.004,rubber,magazine);
+ for(const side of [-1,1]){
+  box(.005,.120,.068,side*.024,-.009,0,polymer,magazine);
+  for(let n=0;n<4;n++)box(.002,.101,.004,side*.027,-.009,-.025+n*.016,edge,magazine);
+  for(let n=0;n<5;n++)box(.0025,.004,.058,side*.0265,-.052+n*.022,0,dark,magazine);
+  box(.003,.012,.068,side*.021,.065,0,steel,magazine);
+  // Witness slot with stacked red 12GA hulls and brass heads visible inside.
+  box(.002,.076,.016,side*.0262,-.008,.012,dark,magazine);
+  for(let s=0;s<4;s++){
+   const sy=.020-s*.018;
+   part(new Ys(.0065,.0065,.022,12),side*.0258,sy,.008,shellRed,magazine,[Math.PI/2,0,0]);
+   part(new Ys(.0068,.0068,.006,12),side*.0258,sy,.021,brass,magazine,[Math.PI/2,0,0]);
+  }
+ }
+ // Top shell sitting in the magazine feed lips.
+ part(new Ys(.0082,.0082,.046,16),0,.066,-.004,shellRed,magazine,[Math.PI/2,0,0]);
+ part(new Ys(.0088,.0088,.010,16),0,.066,.023,brass,magazine,[Math.PI/2,0,0]);
  for(let n=0;n<5;n++)box(.043,.004,.002,0,.034-n*.022,.038,edge,magazine);
  // Merge stationary meshes within each animated assembly to keep draw calls low.
  for(const parent of [body,bolt,magazine]){const batches=new Map;for(const mesh of [...parent.children]){if(!mesh.isMesh)continue;mesh.updateMatrix();const geo=mesh.geometry.index?mesh.geometry.toNonIndexed():mesh.geometry.clone();geo.applyMatrix4(mesh.matrix);if(!batches.has(mesh.material))batches.set(mesh.material,[]);batches.get(mesh.material).push(geo);parent.remove(mesh);mesh.geometry.dispose();}for(const [mat,geos]of batches){parent.add(new Qe(sa(geos,false),mat));geos.forEach(g=>g.dispose());}}
