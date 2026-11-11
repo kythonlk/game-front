@@ -44,6 +44,7 @@ function SALT_RECORDED(key) {
  SALT_SAMPLE_CACHE.set(key,samples);return samples.slice();
 }
 const SALT_SAMPLE_MAP={
+ pistol_shot:['shot2'],
  shotgun_shot:['shotgun'],
  sniper_shot:['sniper'],
  rifle_shot:['shot1','shot2','shot3','shot4'],

@@ -14,16 +14,18 @@
 - Robot preview: `/index.html?show=enemies&eshow=soldier&efreeze=1`.
 
 ## Current state (update me)
-- User committed the mission/weapon work in `78c7185` and renamed `s.html` to `index.html` in `f4ed309`. Final HUD/reload refinements, renamed tooling paths, alternate map, Drone Swarm mission and regression coverage, and memory update are pending locally; no commit or push performed for this task.
-- Four selectable missions: First Contact (4 enemies, maximum 2 active), Warehouse Sweep (8, maximum 3), Terminal Blackout (12, maximum 4), Drone Swarm (20 flying drones, maximum 5). Both Berth 4 and Crossdock support these missions, with distinct relay objectives; Warehouse Sweep also requires clearing all enemies.
-- Drone Swarm is a kill-only mission: no relay/extraction requirement, drone markers and remaining counter, victory after the last of 20 drones, and 20 health/ammo resupply every five kills. Drones stay passive through the intro and activate when control begins.
+- Prior changes are committed through `e21bc44`. Swarm levels, shotgun design, Glock 17, audio mapping, tests, and this memory are pending locally; no commit/push performed for this task.
+- Four selectable missions: First Contact (4 enemies, maximum 2 active), Warehouse Sweep (8, maximum 3), Terminal Blackout (12, maximum 4), Drone Swarm (three levels: 12/20/30 flying drones; maximum 3/5/7 active). Both Berth 4 and Crossdock support these missions, with distinct relay objectives; Warehouse Sweep also requires clearing all enemies.
+- Swarm level defaults to Easy (level 1); `?mission=3&swarm=0/1/2` selects a level. Map changes preserve it, retries keep it, and Next Swarm Level advances after wins until Hard.
+- Drone Swarm is a kill-only mission: no relay/extraction requirement, drone markers and remaining counter, victory after the last drone in the selected level, and 20 health/ammo resupply every five kills. Drones stay passive through the intro and activate when control begins.
 - Maps: original Berth 4 plus selectable Crossdock (`?map=crossdock`), reusing the same prop generators and warehouse/quay shell with new cargo rows, central court, relay, cover, spawns, camera path and south catwalk. Map changes reload the level and preserve the selected mission.
 - Mission menu: Deploy/Settings/Controls stay in a fixed footer while the header, maps and mission cards scroll separately; selecting a mission keeps its card visible.
 - Easier balance: reduced incoming damage, staggered reinforcements, relay health/ammo rewards, enemy progress counter, retry and next-mission navigation.
-- Three weapons: PAC-9 rifle, detailed SR-7 sniper (5 rounds, 4× scope), and pump shotgun (6 shells, eight pellets, wider .085 hip/.050 aimed spread, range falloff, interruptible shell reload). Keys 1/2/3 equip; X or touch SWAP cycles. Z/C crouches; Ctrl no longer crouches.
+- Four weapons: PAC-9 rifle, detailed SR-7 sniper (5 rounds, 4× scope), and pump shotgun (6 shells, eight pellets, wider .085 hip/.050 aimed spread, range falloff, interruptible shell reload). Added Glock 17 (17+68 rounds, semi-auto, moving slide/lockback, 1.8s magazine reload, empty auto reload, ADS). Keys 1/2/3/4 equip; X or touch SWAP cycles all four. Z/C crouches; Ctrl no longer crouches.
+- Shotgun model now has a slotted shroud/rib, hollow muzzle/clamp, detailed receiver and moving bolt, ghost-ring sight, textured pump/stock and red/brass shell carrier. Its wider spread and gameplay stay unchanged.
 - Sniper reloads automatically after its last bolt cycle, including after switching away and back; empty reserve remains stable.
-- 19 embedded recordings serve 18 effect names. Shotgun recording is CC-BY 3.0 with attribution in the game and audio credits; other recordings are CC0.
-- Full Chromium regression passed for robot combat/audio, sniper, shotgun, all four missions and enemy caps, crouch keys, and mission selection on both maps. Swarm checks cover intro safety, aerial weapon hits, drone-only spawning, supplies, pause/retry/death, final-kill completion and restoring relay HUD. Crossdock route/collision checks and map switching passed. Desktop/mobile mission menus and shotgun preview inspected. Deploy visibility/raw-click checks at seven screen sizes and touch deployment passed. Preview server stopped after verification.
+- 19 embedded recordings serve 19 effect names (99 audio buffers). Pistol uses an existing CC0 shot with a separate mix, not a Glock-specific recording. Shotgun recording is CC-BY 3.0 with attribution in the game and audio credits; other recordings are CC0.
+- Full Chromium regression passed for robot combat/audio, sniper, shotgun, all four missions (including all three swarm levels) and enemy caps, crouch keys, and mission selection on both maps. Glock firing, ammo, slide lock, manual/automatic/partial reload and re-equipping tests passed. Swarm checks cover intro safety, aerial weapon hits, drone-only spawning, supplies, pause/retry/death, final-kill completion and restoring relay HUD. Crossdock route/collision checks and map switching passed. Desktop/mobile mission menus and shotgun preview inspected. Deploy visibility/raw-click checks at seven screen sizes and touch deployment passed. Preview server stopped after verification.
 
 ## Work log
 ### 2026-11-10 — codex — Humanoid robots and combat audio
@@ -76,7 +78,13 @@
 - Files: `index.html`, `memory.md`.
 - Verified: Full documented Chromium regression passed, including shotgun pellet counts/damage/wall blocking/reload, all four missions on both maps, weapon/audio controls, Deploy visibility and touch input. No runtime errors; whitespace check passed. Preview server stopped.
 
+### 2026-11-11 — codex — Swarm levels, shotgun detail and Glock 17
+- What: Added Easy/Normal/Hard Drone Swarm profiles (12/20/30 targets; active caps 3/5/7), level selector/query persistence and Next Swarm Level progression. Rebuilt shotgun visual detail while preserving spread/gameplay. Added Glock 17 as slot/key 4 with textured frame, detailed slide/sights, gloved hands, 17-round semi-auto fire, slide lock, magazine and automatic reloads, and recorded audio reuse. Integrated four-weapon keyboard/touch cycling and resupply. Used subagents for both weapon models and a smaller-model mission review.
+- Files: `index.html`, `tests/check-saltline.cjs`, `tools/embed-saltline-audio.py`, `assets/audio/CREDITS.md`, `memory.md`.
+- Verified: Full documented browser regression passed for all existing gameplay and all three swarm levels on both maps, level advancement, drone-only targets/caps/retries and deployment. Glock checks passed single-click fire, ADS, slide lock, manual/auto/partial reload, dry magazine and re-equipping. Separate actual key-4/X/touch-cycle and pistol resupply checks passed, as did direct level URL/map preservation. Shotgun/Glock hip, aimed and reload renders and mobile level menu inspected; zero runtime errors; JS/Python syntax and whitespace checks passed. Preview server stopped.
+
 ## Gotchas
+- Hybrid input switching exits mouse capture and can pause gameplay; touch tests should deploy with a touch event from the menu rather than switch from captured mouse mid-run.
 - Playwright locator clicks auto-scroll and can mask off-screen buttons. Deploy regressions check viewport bounds/hit targets and use raw mouse coordinates plus touch events.
 - Enemies update during mission intros; keep initial swarm drones passive until the playing transition to prevent damage before player control.
 - HUD objective text types in over time; tests must advance HUD updates before checking its complete text.
@@ -85,7 +93,7 @@
 - The user renamed `s.html` to `index.html`; keep preview, test, and audio-build paths aligned. Historical work log filenames are unchanged.
 - Mission tests must drain queued reinforcements before entering extraction for missions that do not require all enemies cleared.
 - Scope lens backing must sit behind the transparent glass, not on the same plane; coplanar caps cause blocky depth artifacts. Static sniper geometry is merged by material per chassis/magazine/bolt before adding gloves and labels.
-- `dm` wraps `PAC9_MK`, `SALT_SNIPER`, and `SALT_SHOTGUN`; player FOV/look scaling reads active weapon settings. New sounds must be registered before the embedded sample mapping runs.
+- `dm` wraps `PAC9_MK`, `SALT_SNIPER`, `SALT_SHOTGUN`, and `SALT_GLOCK17`; player FOV/look scaling reads active weapon settings. New sounds must be registered before the embedded sample mapping runs.
 - Most of `index.html` is a minified bundle with enormous lines; use targeted substring reads instead of unrestricted grep output. Soldier implementation is `SOLDIER_MK`, enemy factory `Em`, audio engine `u_`, sound registry `Go`.
 - Some source Opus recordings decode above full scale. Normalize floating-point samples before converting to PCM16 to avoid clipping.
 - Embedded audio is rebuilt with `python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak`; pinned upstream revision and source hashes are recorded in `assets/audio`.

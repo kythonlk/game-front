@@ -34,3 +34,5 @@ bypassed to retain the recorded attack and decay.
 The audio is embedded as base64 PCM in `index.html`, so playing the game needs no
 external audio requests and works when the HTML is opened directly.
 Rebuild with `python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak`.
+
+The Glock 17 game sidearm reuses the embedded CC0 `shot2` recording with a lower gain and slightly raised playback pitch. It is a game sound treatment, not a recording of a Glock 17.
