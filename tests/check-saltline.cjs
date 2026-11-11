@@ -1,11 +1,16 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
+const path=require('node:path');
+const {execFileSync}=require('node:child_process');
+function checkSourceSyntax(directory){for(const entry of fs.readdirSync(directory,{withFileTypes:true})){const filename=path.join(directory,entry.name);if(entry.isDirectory())checkSourceSyntax(filename);else if(entry.isFile()&&entry.name.endsWith('.js'))execFileSync(process.execPath,['--check',filename],{stdio:'pipe'});}}
+checkSourceSyntax('src');
+async function prepareGameplayAssets(page){await page.evaluate(async()=>{const g=window.__G;if(!g?.weapon?.preloadAll)return;g.renderer.setAnimationLoop(null);await g.assets?.prepareMode?.('foot');await g.audio.warm?.();await g.weapon.preloadAll();});}
 for(const script of fs.readFileSync('index.html','utf8').matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g))new vm.Script(script[1]);
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async()=>{const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--autoplay-policy=no-user-gesture-required']});const page=await browser.newPage({viewport:{width:1100,height:800}});page.on('pageerror',e=>console.log('PAGEERROR',e.message));
-await page.goto('http://127.0.0.1:8087/index.html?show=enemies&eshow=soldier&efreeze=1');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await page.waitForFunction(()=>document.getElementById("boot").hidden);await page.locator('#boot').evaluate(el=>el.remove());await page.screenshot({path:'/tmp/saltline-robot.png'});console.log('SHOWCASE',await page.evaluate(()=>({fatal:__fatal,errors:__errors,stats:__stats(),enemies:__G.enemies.list.length})));
-await page.goto('http://127.0.0.1:8087/index.html?autostart=1&q=low');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await page.evaluate(()=>{__G.renderer.setAnimationLoop(null);return __G.audio.ready;});await page.mouse.click(550,400);
+await page.goto('http://127.0.0.1:8087/index.html?show=enemies&eshow=soldier&efreeze=1');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await prepareGameplayAssets(page);await page.waitForFunction(()=>document.getElementById("boot").hidden);await page.locator('#boot').evaluate(el=>el.remove());await page.evaluate(()=>__G.renderer.setAnimationLoop(null));await page.screenshot({path:'/tmp/saltline-robot.png'});console.log('SHOWCASE',await page.evaluate(()=>({fatal:__fatal,errors:__errors,stats:__stats(),enemies:__G.enemies.list.length})));
+await page.goto('http://127.0.0.1:8087/index.html?autostart=1&q=low');await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await prepareGameplayAssets(page);await page.evaluate(()=>{__G.renderer.setAnimationLoop(null);return __G.audio.ready;});await page.mouse.click(550,400);
 const result=await page.evaluate(async()=>{const g=__G;g.player.invulnerable=true;const events={};for(const n of ['enemy:step','enemy:fire','enemy:hit','enemy:killed'])g.events.on(n,()=>events[n]=(events[n]||0)+1);const p=g.player.pos.clone();p.z-=5;const bot=g.enemies.spawn('soldier',p,{state:'alert',target:g.player.pos});if(!bot)throw Error('No soldier slot');bot.mode='engage';for(let j=0;j<240;j++)bot._update(1/60);bot.damage(20,bot.pos,null,'body');bot.damage(999,bot.pos,null,'weak');for(let j=0;j<410;j++)bot._update(1/60);const played={};for(const n of ['pistol_shot','shotgun_shot','sniper_shot','rifle_shot','soldier_fire','soldier_step','soldier_alert','soldier_die','reload_magout','reload_magin','reload_bolt','rifle_dry','shell_bounce','impact_metal','impact_enemy','gull_fire','hound_fire'])played[n]=g.audio.play(n,{pos:p});return {events,played,retired:!bot.active,audio:g.audio.debug(),errors:__errors,fatal:__fatal};});assert.equal(result.fatal,null);for(const name of Object.keys(result.played))assert.ok(result.audio.recorded.includes(name),'Missing recording: '+name);assert.deepEqual(result.errors,[]);assert.equal(result.retired,true);for(const played of Object.values(result.played))assert.equal(played,true);for(const n of ['enemy:step','enemy:fire','enemy:hit','enemy:killed'])assert.ok(result.events[n]>0,n);console.log('PASS',result);
 const sniperResult=await page.evaluate(()=>{
  const g=__G,w=g.weapon,originalInput=g.input,originalShot=g.combat.playerShot;
@@ -344,11 +349,11 @@ await page.locator('[data-act="deploy"]').click();assert.equal(await page.evalua
 assert.deepEqual(await page.evaluate(()=>__errors),[]);console.log('MISSION MENU PASS');
 
 // Map selection rebuilds the level using the same props with independent placement data.
-const originalMap=await page.evaluate(()=>({id:__G.level.map.id,containers:__G.level.placed.filter(p=>p.name.startsWith('container')),shell:__G.level.placed.filter(p=>(p.x>=-16&&p.x<=12&&p.z< -11)||p.x>17)}));
+const originalMap=await page.evaluate(()=>({id:__G.level.map.id,containers:__G.level.placed.filter(p=>p.name.startsWith('container')),interior:__G.level.interiorBoxes.map(b=>({min:b.min.toArray(),max:b.max.toArray()})),start:__G.level.playerStart.pos.toArray(),extraction:__G.level.extraction.pos.toArray()}));
 assert.equal(originalMap.id,'berth4');
 await page.evaluate(()=>{__G.game.start({mission:1,skipIntro:true});__G.game.pause();__G.game.menus.root.querySelector('[data-act="missions"]').click();});
 await Promise.all([page.waitForURL('**/*map=crossdock*'),page.locator('[data-map="crossdock"]').click()]);
-await page.waitForFunction(()=>window.__ready,null,{timeout:60000});
+await page.waitForFunction(()=>window.__ready,null,{timeout:60000});await prepareGameplayAssets(page);
 await page.waitForFunction(()=>document.getElementById('boot').hidden);await page.locator('#boot').evaluate(el=>el.remove());
 await page.evaluate(()=>__G.renderer.setAnimationLoop(null));
 assert.equal(await page.locator('[data-map="crossdock"]').getAttribute('aria-pressed'),'true');
@@ -364,12 +369,16 @@ const newMap=await page.evaluate(()=>{
   });
   if(!reachable)failures.push('unreachable '+target.id);
  }
- for(const spawn of l.enemySpawns.filter(p=>p.type==='ground'))if(!nav.isWalkable(spawn.pos.x,spawn.pos.z)||!nav.findPath(l.playerStart.pos,spawn.pos))failures.push('unreachable enemy spawn');
+ for(const spawn of l.enemySpawns.filter(p=>p.type==='ground')){const path=nav.findPath(l.playerStart.pos,spawn.pos);if(!nav.isWalkable(spawn.pos.x,spawn.pos.z)||!path?.length||path[path.length-1].distanceTo(spawn.pos)>.8)failures.push('unreachable enemy spawn '+spawn.pos.toArray());}
  const containers=l.placed.filter(p=>p.name.startsWith('container'));
  if(containers.some(p=>p.y===0&&nav.isWalkable(p.x,p.z)))failures.push('container without collision');
- return {id:l.map.id,containers,shell:l.placed.filter(p=>(p.x>=-16&&p.x<=12&&p.z< -11)||p.x>17),failures,stats:l.stats,errors:__errors,fatal:__fatal};
+ return {id:l.map.id,title:l.map.title,containers,interior:l.interiorBoxes.map(b=>({min:b.min.toArray(),max:b.max.toArray()})),start:l.playerStart.pos.toArray(),extraction:l.extraction.pos.toArray(),dry:{rain:g.ground.rainLevel,wet:g.mats.uniforms.wet.value,puddle:g.ground.isPuddle(0,0),surface:g.ground.wetnessAt(0,0),sea:g.ground.sea,ground:g.ground.root.name,backdrop:g.backdrop.root.name},failures,stats:l.stats,errors:__errors,fatal:__fatal};
 });
-assert.equal(newMap.id,'crossdock');assert.notDeepEqual(newMap.containers,originalMap.containers);assert.equal(newMap.shell.length,originalMap.shell.length);for(let n=0;n<newMap.shell.length;n++){const a=newMap.shell[n],b=originalMap.shell[n];assert.equal(a.name,b.name);for(const key of ['x','y','z','yaw'])assert.ok(Math.abs(a[key]-b[key])<.15,'shell landmark changed: '+a.name+' '+key);}assert.deepEqual(newMap.failures,[]);assert.deepEqual(newMap.errors,[]);assert.equal(newMap.fatal,null);
+assert.equal(newMap.id,'crossdock');assert.equal(newMap.title,'Dry Basin');
+assert.notDeepEqual(newMap.containers,originalMap.containers);assert.notDeepEqual(newMap.interior,originalMap.interior);
+assert.notDeepEqual(newMap.start,originalMap.start);assert.notDeepEqual(newMap.extraction,originalMap.extraction);
+assert.deepEqual(newMap.dry,{rain:0,wet:0,puddle:false,surface:0,sea:null,ground:'dry-basin-ground',backdrop:'dry-basin-backdrop'});
+assert.deepEqual(newMap.failures,[]);assert.deepEqual(newMap.errors,[]);assert.equal(newMap.fatal,null);
 await page.setViewportSize({width:1280,height:800});await page.screenshot({path:'/tmp/saltline-crossdock-menu.png'});
 await page.setViewportSize({width:390,height:844});await page.screenshot({path:'/tmp/saltline-crossdock-mobile.png'});
 assert.equal(await page.locator('[data-map="crossdock"]').isVisible(),true);

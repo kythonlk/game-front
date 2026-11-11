@@ -5,27 +5,27 @@
 
 ## Project snapshot
 - Browser game collection at `/var/home/kythonlk/ai/game-front`.
-- `index.html` is a standalone Saltline FPS containing bundled Three.js, game code, and embedded recorded audio; `snake.html` is the former root game. `Game-java` is a separate React/Vite project.
+- `index.html` is the Saltline FPS page shell. Its ES modules, CSS, selected maps, weapons, FPV mode and locally bundled recordings live in `src/`; `snake.html` is the former root game. `Game-java` is a separate React/Vite project.
 
 ## Commands that matter
 - Preview: `python3 -m http.server 8087 --bind 127.0.0.1`.
 - Regression (server required): `PLAYWRIGHT_MODULE=/var/home/kythonlk/ext/erp/FocusX/focusx-perf/node_modules/playwright node tests/check-saltline.cjs` (or omit env if playwright is installed locally).
-- Test parses inline JS, boots robot showcase and gameplay in Chromium, exercises soldier movement/shooting/damage/death/pool retirement, and checks audio playback and runtime errors.
+- Tests recursively syntax-check `src/**/*.js` and exercise gameplay in Chromium. Run the suites sequentially; parallel software-rendered browsers can time out.
+- Additional suites (same `PLAYWRIGHT_MODULE` env): `node tests/check-auto-shotgun.cjs`, `node tests/check-fpv.cjs`, `node tests/check-expansion.cjs`, `node tests/check-loading.cjs`.
+- Serve the full repository over HTTP; ES module imports do not work by opening `index.html` as `file://`. No build step required.
 - Robot preview: `/index.html?show=enemies&eshow=soldier&efreeze=1`.
 
 ## Current state (update me)
-- Prior changes are committed through `e21bc44`. Swarm levels, shotgun design, Glock 17, audio mapping, tests, and this memory are pending locally; no commit/push performed for this task.
-- Four selectable missions: First Contact (4 enemies, maximum 2 active), Warehouse Sweep (8, maximum 3), Terminal Blackout (12, maximum 4), Drone Swarm (three levels: 12/20/30 flying drones; maximum 3/5/7 active). Both Berth 4 and Crossdock support these missions, with distinct relay objectives; Warehouse Sweep also requires clearing all enemies.
-- Swarm level defaults to Easy (level 1); `?mission=3&swarm=0/1/2` selects a level. Map changes preserve it, retries keep it, and Next Swarm Level advances after wins until Hard.
-- Drone Swarm is a kill-only mission: no relay/extraction requirement, drone markers and remaining counter, victory after the last drone in the selected level, and 20 health/ammo resupply every five kills. Drones stay passive through the intro and activate when control begins.
-- Maps: original Berth 4 plus selectable Crossdock (`?map=crossdock`), reusing the same prop generators and warehouse/quay shell with new cargo rows, central court, relay, cover, spawns, camera path and south catwalk. Map changes reload the level and preserve the selected mission.
-- Mission menu: Deploy/Settings/Controls stay in a fixed footer while the header, maps and mission cards scroll separately; selecting a mission keeps its card visible.
-- Easier balance: reduced incoming damage, staggered reinforcements, relay health/ammo rewards, enemy progress counter, retry and next-mission navigation.
-- Four weapons: PAC-9 rifle, detailed SR-7 sniper (5 rounds, 4× scope), and pump shotgun (6 shells, eight pellets, wider .085 hip/.050 aimed spread, range falloff, interruptible shell reload). Added Glock 17 (17+68 rounds, semi-auto, moving slide/lockback, 1.8s magazine reload, empty auto reload, ADS). Keys 1/2/3/4 equip; X or touch SWAP cycles all four. Z/C crouches; Ctrl no longer crouches.
-- Shotgun model now has a slotted shroud/rib, hollow muzzle/clamp, detailed receiver and moving bolt, ghost-ring sight, textured pump/stock and red/brass shell carrier. Its wider spread and gameplay stay unchanged.
-- Sniper reloads automatically after its last bolt cycle, including after switching away and back; empty reserve remains stable.
-- 19 embedded recordings serve 19 effect names (99 audio buffers). Pistol uses an existing CC0 shot with a separate mix, not a Glock-specific recording. Shotgun recording is CC-BY 3.0 with attribution in the game and audio credits; other recordings are CC0.
-- Full Chromium regression passed for robot combat/audio, sniper, shotgun, all four missions (including all three swarm levels) and enemy caps, crouch keys, and mission selection on both maps. Glock firing, ammo, slide lock, manual/automatic/partial reload and re-equipping tests passed. Swarm checks cover intro safety, aerial weapon hits, drone-only spawning, supplies, pause/retry/death, final-kill completion and restoring relay HUD. Crossdock route/collision checks and map switching passed. Desktop/mobile mission menus and shotgun preview inspected. Deploy visibility/raw-click checks at seven screen sizes and touch deployment passed. Preview server stopped after verification.
+- Previous work is committed through `ef11930` (`Drone leveles`). Current map/FPV/automatic-shotgun/module/performance changes are uncommitted; no commit or push requested for this task.
+- Two maps: original wet/rainy Berth 4 and fully rebuilt Dry Basin (legacy URL `?map=crossdock`). Dry Basin has its own east warehouse, west cargo lanes, north utilities, relays, deployment/exit, cover/spawns, gravel terrain, quarry backdrop and warm dusty daylight. No rain, puddles, sea or coastal audio there.
+- Four on-foot operations remain: First Contact (4 enemies), Warehouse Sweep (8), Terminal Blackout (12), Drone Swarm with Easy/Normal/Hard levels (12/20/30 drones; caps 3/5/7).
+- FPV mode has Sky Sweep (8 flying drones), Machine Hunt (10 mixed robots), Radar Run (11 mixed robots plus scanning radars). Finite waves, passive intro enemies, supplies, retries and next-mission progression work on both maps.
+- FPV uses damped WASD flight, Space up, Z/C down, Shift boost, mouse look, swept hull collision, a 20m ceiling and a fictional rechargeable pulse projector. Touch UP/DOWN are wired. Radar uses rotating sectors, physics visibility, exposure/damage and requires clearing contact after the final target.
+- Five human weapons: PAC-9, SR-7 sniper, pump shotgun, Glock 17, A-12 automatic shotgun. Keys 1–5 select; X/touch SWAP cycles. Automatic shotgun: 10+50 shells, 8 pellets, held automatic fire, magazine/empty reload, animated bolt/box magazine and detailed model. Original weapons/controls remain intact.
+- `index.html` is now a tiny shell. Shared engine/runtime/styles are separate; selected map, FPV mode and weapon modules load on demand. Human weapon models are constructed only when equipped. Direct FPV startup loads no human weapon modules/models. Recordings load on first deployment when audio is enabled.
+- Default graphics: desktop Medium, integrated/software/mobile Low. Low uses 1024 shadows and disables bloom/AO/reflections/volumetrics; Medium removes MSAA/reflections and reduces volumetrics. Explicit High/Ultra remain available. HUD enemy text only changes when its value changes.
+- Map selection preserves mission/swarm level; mode-specific mission cards remember choices. Deploy remains in a fixed footer and displays loading state while new mode/audio assets arrive.
+- All five documented Chromium suites passed: existing gameplay/audio, automatic shotgun, FPV controls, expansion missions/radar, and selective loading/audio/touch. New source syntax and audio-tool Python syntax passed; no browser errors. Dry Basin, shotgun and live FPV screenshots inspected. Preview server stopped after verification.
 
 ## Work log
 ### 2026-11-10 — codex — Humanoid robots and combat audio
@@ -83,18 +83,25 @@
 - Files: `index.html`, `tests/check-saltline.cjs`, `tools/embed-saltline-audio.py`, `assets/audio/CREDITS.md`, `memory.md`.
 - Verified: Full documented browser regression passed for all existing gameplay and all three swarm levels on both maps, level advancement, drone-only targets/caps/retries and deployment. Glock checks passed single-click fire, ADS, slide lock, manual/auto/partial reload, dry magazine and re-equipping. Separate actual key-4/X/touch-cycle and pistol resupply checks passed, as did direct level URL/map preservation. Shotgun/Glock hip, aimed and reload renders and mobile level menu inspected; zero runtime errors; JS/Python syntax and whitespace checks passed. Preview server stopped.
 
+### 2026-11-11 — codex — Dry Basin, FPV missions, automatic shotgun and modular loading
+- What: Rebuilt the second map as Dry Basin with independent layout, dry terrain and warm weather; added FPV flight, three finite hunt missions and radar scanning; added detailed automatic shotgun as slot 5. Split the game into an 831-byte HTML shell, CSS and 11 JS modules. Load only the chosen map/mode/weapon code, build weapons when equipped, defer 887 KB recordings until deployment, and lower default rendering costs. Fixed cancellation of a pending weapon switch and added real touch UP/DOWN controls. Used feature subagents and a small-model review.
+- Files: `index.html`, `src/`, `README.md`, `tests/check-{saltline,auto-shotgun,fpv,expansion,loading}.cjs`, `assets/audio/CREDITS.md`, `tools/embed-saltline-audio.py`, `memory.md`.
+- Verified: All five documented Chromium suites passed sequentially. Existing weapons/audio, missions and all swarm levels pass on both maps; all Dry Basin relay/exit/spawn routes pass. FPV flight/collisions/fire and all three missions, radar cover/damage/clear-contact completion, retries and mode restoration pass. Automatic shotgun pellet/cadence/reload checks pass at 30/60/120 Hz. Network assertions prove unused map/gun/FPV/audio modules stay unloaded, audio arrives on Deploy, direct FPV has no human weapons, and delayed weapon switching cancels correctly. Actual touch ascent/descent and fixed-footer deployment pass. Zero runtime errors; JS/Python syntax and whitespace checks pass; gameplay screenshots inspected. No commit/push; preview stopped.
+
 ## Gotchas
+- A single manual render after resizing or changing game/menu state can capture a stale black framebuffer. Visual tests should start a fresh mission and wait for several real animation frames before taking screenshots.
 - Hybrid input switching exits mouse capture and can pause gameplay; touch tests should deploy with a touch event from the menu rather than switch from captured mouse mid-run.
 - Playwright locator clicks auto-scroll and can mask off-screen buttons. Deploy regressions check viewport bounds/hit targets and use raw mouse coordinates plus touch events.
 - Enemies update during mission intros; keep initial swarm drones passive until the playing transition to prevent damage before player control.
 - HUD objective text types in over time; tests must advance HUD updates before checking its complete text.
-- Shared shell container stacks have seeded placement jitter; cross-map landmark comparisons allow 0.15m/radian tolerance.
+- Original container stacks have seeded placement jitter. Dry Basin now replaces the entire second-map shell; do not assert shared warehouse/extraction coordinates.
 - Relay bodies have solid colliders, so their exact centers are not navigable. Validate reachable approaches inside the 2.2m interaction radius instead of requiring `nav.isWalkable(relay.pos)`.
 - The user renamed `s.html` to `index.html`; keep preview, test, and audio-build paths aligned. Historical work log filenames are unchanged.
 - Mission tests must drain queued reinforcements before entering extraction for missions that do not require all enemies cleared.
 - Scope lens backing must sit behind the transparent glass, not on the same plane; coplanar caps cause blocky depth artifacts. Static sniper geometry is merged by material per chassis/magazine/bolt before adding gloves and labels.
-- `dm` wraps `PAC9_MK`, `SALT_SNIPER`, `SALT_SHOTGUN`, and `SALT_GLOCK17`; player FOV/look scaling reads active weapon settings. New sounds must be registered before the embedded sample mapping runs.
-- Most of `index.html` is a minified bundle with enormous lines; use targeted substring reads instead of unrestricted grep output. Soldier implementation is `SOLDIER_MK`, enemy factory `Em`, audio engine `u_`, sound registry `Go`.
+- `dm` in `src/runtime.js` loads five human weapons on demand and routes FPV to its projector. `select()` schedules fetching for unloaded weapons; tests expecting synchronous selection must first await `weapon.preloadAll()` or `prepare(slot)`. Mission starts return a promise when mode/audio loading is needed.
+- Test helpers that start several modes synchronously should await `assets.prepareMode('foot')`, `assets.prepareMode('fpv')`, and `audio.warm?.()` first. Production UI handles its own loading state.
+- `src/runtime.js` and `src/engine.js` retain minified sections with enormous lines; use targeted substring reads. Soldier implementation is `SOLDIER_MK`, enemy factory `Em`, audio engine `u_`, sound registry `Go`. Optional content uses factory modules sharing the same engine dependencies.
 - Some source Opus recordings decode above full scale. Normalize floating-point samples before converting to PCM16 to avoid clipping.
 - Embedded audio is rebuilt with `python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak`; pinned upstream revision and source hashes are recorded in `assets/audio`.
 - Sandbox blocks local server sockets and Chromium; browser checks require escalation.
@@ -102,7 +109,12 @@
 - `__ready` occurs before the boot overlay finishes fading; wait for it to clear when taking previews.
 
 ## File map
-- `index.html`: self-contained FPS; edit directly (no separate source/build chain found).
-- `tests/check-saltline.cjs`: browser regression checks.
+- `index.html`: small HTML entrypoint.
+- `src/runtime.js`, `src/engine.js`, `src/game.css`: shared gameplay/loader, bundled Three.js engine, interface styles.
+- `src/maps/{berth4,dry-basin}.js`: independently loaded map/terrain/backdrop factories.
+- `src/weapons/*.js`: five weapon factories loaded on selection.
+- `src/modes/fpv.js`: flight controller, projector and radar.
+- `src/audio/recordings.js`: licensed PCM samples and effect mapping, loaded on deployment.
+- `tests/check-*.cjs`: existing gameplay, automatic shotgun, FPV controls, expansion missions/radar, selective loading/audio/touch regressions.
 - `Game-java/`: separate React/Vite game.
 - `snake.html`, `game.js`, `styles.css`: former root game.

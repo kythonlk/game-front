@@ -1,6 +1,6 @@
 """Embed selected licensed recordings from an extracted openspades-free-pak checkout.
 Usage: python3 tools/embed-saltline-audio.py /path/to/openspades-free-pak
-Requires ffmpeg. Embedded PCM keeps index.html playable offline, including file://.
+Requires ffmpeg. PCM recordings are loaded as a separate module; serve the game over HTTP.
 """
 import array, base64, hashlib, json, math, re, subprocess, sys
 from pathlib import Path
@@ -61,7 +61,7 @@ for(const [name,keys] of Object.entries(SALT_SAMPLE_MAP)){
 }
 /* RECORDED AUDIO END */
 '''
-p=root/'index.html';s=p.read_text()
+p=root/'src/audio/recordings.js';s=p.read_text()
 if '/* RECORDED AUDIO BEGIN' in s:s=re.sub(r'/\* RECORDED AUDIO BEGIN[\s\S]*?/\* RECORDED AUDIO END \*/\n',lambda _:block,s)
 else:
  a=s.index('function SALT_SFX(');b=s.index('async function c_(',a);s=s[:a]+block+s[b:]
