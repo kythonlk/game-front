@@ -11,13 +11,14 @@
 - Preview: `python3 -m http.server 8087 --bind 127.0.0.1`.
 - Regression (server required): `PLAYWRIGHT_MODULE=/var/home/kythonlk/ext/erp/FocusX/focusx-perf/node_modules/playwright node tests/check-saltline.cjs` (or omit env if playwright is installed locally).
 - Tests recursively syntax-check `src/**/*.js` and exercise gameplay in Chromium. Run the suites sequentially; parallel software-rendered browsers can time out.
-- Additional suites (same `PLAYWRIGHT_MODULE` env): `node tests/check-auto-shotgun.cjs`, `node tests/check-fpv.cjs`, `node tests/check-expansion.cjs`, `node tests/check-loading.cjs`.
+- Additional suites (same `PLAYWRIGHT_MODULE` env): `node tests/check-auto-shotgun.cjs`, `node tests/check-fpv.cjs`, `node tests/check-expansion.cjs`, `node tests/check-loading.cjs`, `node tests/check-maps.cjs`. The map suite walks both bridges and tower stairs using the actual controller, operates the elevated relay, checks long sightlines/nav and completes foot missions.
 - Serve the full repository over HTTP; ES module imports do not work by opening `index.html` as `file://`. No build step required.
 - Robot preview: `/index.html?show=enemies&eshow=soldier&efreeze=1`.
 
 ## Current state (update me)
-- Previous work is committed through `ef11930` (`Drone leveles`). Current map/FPV/automatic-shotgun/module/performance changes are uncommitted; no commit or push requested for this task.
-- Two maps: original wet/rainy Berth 4 and fully rebuilt Dry Basin (legacy URL `?map=crossdock`). Dry Basin has its own east warehouse, west cargo lanes, north utilities, relays, deployment/exit, cover/spawns, gravel terrain, quarry backdrop and warm dusty daylight. No rain, puddles, sea or coastal audio there.
+- Runtime, CSS and optional new map URLs include `v=20261113-layouts` to bypass stale browser modules. User preview server is running on port 8087.
+- Base commit is `a49335a` (`update`). Frost Pier rebuild, Eagle’s Nest map, map loading/UI/navigation changes, tests/docs and this memory update are uncommitted; no commit or push requested.
+- Four maps. Frost Pier now has a frozen canal, two bridges, three radomes, an instrument court and an eastern tank peninsula; its original warehouse/cargo layout was removed. Eagle’s Nest (`?map=eaglesnest`) is a 100 × 208 m military valley with low barracks, distant firing lanes and a 12 m tower. Three switchback stair flights lead to the deck and Relay A; foot deployments equip the SR-7. Original wet/rainy Berth 4 and fully rebuilt Dry Basin (legacy URL `?map=crossdock`). Dry Basin has its own east warehouse, west cargo lanes, north utilities, relays, deployment/exit, cover/spawns, gravel terrain, quarry backdrop and warm dusty daylight. No rain, puddles, sea or coastal audio there.
 - Four on-foot operations remain: First Contact (4 enemies), Warehouse Sweep (8), Terminal Blackout (12), Drone Swarm with Easy/Normal/Hard levels (12/20/30 drones; caps 3/5/7).
 - FPV mode has Sky Sweep (8 flying drones), Machine Hunt (10 mixed robots), Radar Run (11 mixed robots plus scanning radars). Finite waves, passive intro enemies, supplies, retries and next-mission progression work on both maps.
 - FPV uses damped WASD flight, Space up, Z/C down, Shift boost, mouse look, swept hull collision, a 20m ceiling and a fictional rechargeable pulse projector. Touch UP/DOWN are wired. Radar uses rotating sectors, physics visibility, exposure/damage and requires clearing contact after the final target.
@@ -25,9 +26,24 @@
 - `index.html` is now a tiny shell. Shared engine/runtime/styles are separate; selected map, FPV mode and weapon modules load on demand. Human weapon models are constructed only when equipped. Direct FPV startup loads no human weapon modules/models. Recordings load on first deployment when audio is enabled.
 - Default graphics: desktop Medium, integrated/software/mobile Low. Low uses 1024 shadows and disables bloom/AO/reflections/volumetrics; Medium removes MSAA/reflections and reduces volumetrics. Explicit High/Ultra remain available. HUD enemy text only changes when its value changes.
 - Map selection preserves mission/swarm level; mode-specific mission cards remember choices. Deploy remains in a fixed footer and displays loading state while new mode/audio assets arrive.
-- All five documented Chromium suites passed: existing gameplay/audio, automatic shotgun, FPV controls, expansion missions/radar, and selective loading/audio/touch. New source syntax and audio-tool Python syntax passed; no browser errors. Dry Basin, shotgun and live FPV screenshots inspected. Preview server stopped after verification.
+- All six documented Chromium suites passed, including new map walking/foot completion checks: existing gameplay/audio, automatic shotgun, FPV controls, expansion missions/radar, and selective loading/audio/touch. New source syntax and audio-tool Python syntax passed; no browser errors. Dry Basin, shotgun and live FPV screenshots inspected. Existing user preview server remains running on port 8087.
 
 ## Work log
+### 2026-11-13 — codex — Distinct Frost Pier and Eagle’s Nest sniper map
+- What: Rebuilt map 3 around a frozen canal with twin bridges, radomes, instrument huts and tank peninsula; added a separate 208 m military valley with barracks, open firing lanes and a covered 12 m sniper tower. Tower stairs are walkable in both directions and Relay A is on the deck. Foot deployments equip SR-7; all existing foot/FPV operations work. Expanded nav/bounds/search budget, suppressed coastal/rain audio on new maps, fixed outer menu scrolling and refreshed asset URLs.
+- Files: `src/maps/{frost-pier,eagles-nest}.js`, `src/runtime.js`, `src/game.css`, `index.html`, `tests/check-{maps,expansion,loading}.cjs`, `README.md`, `memory.md`.
+- Verified: All six documented Chromium suites passed sequentially. Both new maps complete all four foot operations; all four maps complete all three FPV operations/radar checks. Actual controller walks both bridges, climbs/descends the tower, operates its elevated relay and has a clear 140+ m firing lane. Objective/extraction paths, selective loading and desktop/mobile/landscape menus pass. Rendered previews inspected; zero runtime errors; JS syntax/whitespace pass. Existing preview server left running; no commit/push.
+
+### 2026-11-13 — codex — Refresh cached Frost Pier modules
+- What: User still saw the old `xs` constructor error; confirmed their running localhost server serves the corrected source. Versioned runtime and Frost Pier module URLs so cached pre-fix modules are bypassed; added a network URL regression assertion.
+- Files: `index.html`, `src/runtime.js`, `tests/check-loading.cjs`, `memory.md`.
+- Verified: Documented loading suite passed (foot/FPV Frost Pier, lazy assets, audio and touch). JS syntax and whitespace passed. Existing user preview server on 8087 left running.
+
+### 2026-11-13 — codex — Fix Frost Pier loading
+- What: Replaced incompatible geometry/prop helper calls with shared map-builder adapters; resolved material names, geometry constructors, texture wrapping, scene/sky access and ground/backdrop contracts. Added foot/FPV loading assertions requiring real colliders, ground and backdrop.
+- Files: `src/maps/frost-pier.js`, `tests/check-loading.cjs`, `memory.md`.
+- Verified: All five documented Chromium suites passed sequentially; Frost Pier boots into foot/FPV gameplay and completes all three FPV missions/radar checks with zero runtime errors. Source/test syntax and whitespace checks passed. Preview server stopped.
+
 ### 2026-11-10 — codex — Humanoid robots and combat audio
 - What: Rebuilt soldier geometry and walk articulation, synchronized mechanical footsteps, added aim cue and soldier showcase, rebuilt rifle synthesis and soldier effects, adjusted mix.
 - Files: `s.html`, `tests/check-saltline.cjs`, `memory.md`.
@@ -94,6 +110,9 @@
 - Verified: All five Chromium Playwright regression suites (`check-saltline.cjs`, `check-auto-shotgun.cjs`, `check-fpv.cjs`, `check-expansion.cjs`, `check-loading.cjs`) passed with zero runtime or page errors; inspected rendered screenshots of SR-7 hip/scoped, B-12 shotgun, slimmed Glock 17 hip/ADS, and A-12 hip/ADS/reload.
 
 ## Gotchas
+- Eagle’s Nest expands `oi` and nav dimensions before physics creation; its nav cells are 1 m. A* must allow the grid-sized search budget for long routes (the former 9,000-node cap failed the north exit). Tower treads rise .2 m, below the .42 m player step limit, and are excluded from ground enemy navigation.
+- The title outer panel uses `overflow:clip`; only `.m-title-main` scrolls. `overflow:hidden` permits programmatic scrolling of the outer panel and can leave controls clipped after viewport changes.
+- Engine aliases are specific types/functions: `xs` is CanvasTexture, `ts` is a numeric half-pi, `By` merges geometry, `ob` creates a map builder, and `Is` is a wrapping constant. Map code must use builder methods for props/colliders and `lt` for explicit Three.js constructors. Materials are resolved via `i.mats.get()`, and the scene is `i.scene`.
 - A single manual render after resizing or changing game/menu state can capture a stale black framebuffer. Visual tests should start a fresh mission and wait for several real animation frames before taking screenshots.
 - Hybrid input switching exits mouse capture and can pause gameplay; touch tests should deploy with a touch event from the menu rather than switch from captured mouse mid-run.
 - Playwright locator clicks auto-scroll and can mask off-screen buttons. Deploy regressions check viewport bounds/hit targets and use raw mouse coordinates plus touch events.
@@ -116,7 +135,7 @@
 ## File map
 - `index.html`: small HTML entrypoint.
 - `src/runtime.js`, `src/engine.js`, `src/game.css`: shared gameplay/loader, bundled Three.js engine, interface styles.
-- `src/maps/{berth4,dry-basin}.js`: independently loaded map/terrain/backdrop factories.
+- `src/maps/{berth4,dry-basin,frost-pier,eagles-nest}.js`: independently loaded map/terrain/backdrop factories.
 - `src/weapons/*.js`: five weapon factories loaded on selection.
 - `src/modes/fpv.js`: flight controller, projector and radar.
 - `src/audio/recordings.js`: licensed PCM samples and effect mapping, loaded on deployment.

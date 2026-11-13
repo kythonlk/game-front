@@ -16,6 +16,24 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  await page.evaluate(()=>{__G.game.pause();__G.game.menus.root.querySelector('[data-act="missions"]').click();});await page.locator('button[data-pilot="fpv"]').click();await page.locator('[data-act="deploy"]').click();await page.waitForFunction(()=>__G.game.state==='intro'&&__G.player.fpv);assert.equal(await page.locator('[data-act="deploy"]').isDisabled(),false);
  await page.evaluate(()=>{__G.game.update(4);__G.player.update(.016);__G.weapon.update(.016);});result=await snapshot();assert.ok(result.files.includes('modes/fpv.js'));assert.equal(await page.evaluate(()=>__G.weapon.selected),-1);assert.deepEqual(result.errors,[]);assert.equal(result.fatal,null);
  console.log('LAZY LOAD PASS',{initialFiles:foot.files,constructedAfterKey5:result.slots,modeFetch:true});
+ // Frost Pier must build real geometry, ground and backdrop without boot fallbacks.
+ for(const mission of [0,4]){
+  await boot('?map=frostpier&mission='+mission+'&autostart=1&q=low&noaudio=1');
+  assert.ok((await snapshot()).files.includes('maps/frost-pier.js?v=20261113-layouts'),'Frost Pier must use the refreshed module URL');
+  const frost=await page.evaluate(()=>({errors:__errors,fatal:__fatal,state:__G.game.state,map:__G.level.map.id,boxes:__G.physics.boxes.length,ground:__G.ground.apron?.isMesh,backdrop:__G.scene.getObjectByName('backdrop-frost-pier')?.children.length}));
+  assert.deepEqual(frost.errors,[]);assert.equal(frost.fatal,null);assert.equal(frost.state,'playing');assert.equal(frost.map,'frostpier');assert.ok(frost.boxes>20);assert.equal(frost.ground,true);assert.ok(frost.backdrop>10);
+ }
+ console.log('FROST PIER LOAD PASS');
+ // The larger sniper map remains selective in both deployment modes.
+ for(const mission of [0,4]){
+  await boot('?map=eaglesnest&mission='+mission+'&autostart=1&q=low&noaudio=1');
+  const eagle=await snapshot();assert.deepEqual(eagle.errors,[]);assert.equal(eagle.fatal,null);
+  assert.ok(eagle.files.some(f=>f.startsWith('maps/eagles-nest.js')));
+  assert.ok(!eagle.files.some(f=>/^maps\/(berth4|dry-basin|frost-pier)/.test(f)));
+  assert.equal(await page.evaluate(()=>__G.weapon.selected),mission===0?1:-1);
+  if(mission===4)assert.deepEqual(eagle.slots,[]);
+ }
+ console.log('EAGLES NEST LAZY LOAD PASS');
  // Starting directly in FPV loads no humanoid weapon code or models.
  await boot('?map=crossdock&mission=4&q=low&noaudio=1');const drone=await snapshot();assert.ok(drone.files.includes('maps/dry-basin.js'));assert.ok(drone.files.includes('modes/fpv.js'));assert.ok(!drone.files.includes('maps/berth4.js'));assert.ok(!drone.files.some(f=>f.startsWith('weapons/')));assert.deepEqual(drone.slots,[]);
  // Exercise actual mobile ascend / descend events, including held controls.

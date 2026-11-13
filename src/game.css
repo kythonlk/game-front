@@ -363,7 +363,8 @@ kbd { display: inline-block; font: 500 10px/1 var(--f-mono); color: var(--bone);
 .mission-card[aria-pressed="true"] span{color:var(--signal)}
 .m-title .m-word{font-size:clamp(52px,12vw,140px)!important}
 .m-title .m-legend{display:none}.m-title .m-only-narrow{display:inline-block}
-.m-title{overflow:hidden;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0}
+/* Keep only the inner mission panel scrollable, including during viewport changes. */
+.m-title{overflow:clip;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:0}
 .m-title-main{max-width:1040px;width:100%;min-height:0;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:4px 4px 16px 0;scroll-padding:12px}
 .m-title-actions{flex:0 0 auto;position:relative;z-index:1;max-width:1040px;width:100%;margin-top:12px;padding:10px 0 0;border-top:1px solid var(--line);background:var(--ink)}
 .m-debrief .m-h{white-space:normal}.menu .btn[hidden]{display:none}

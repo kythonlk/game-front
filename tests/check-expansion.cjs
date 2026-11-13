@@ -4,7 +4,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
  const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  try{
  const page=await browser.newPage({viewport:{width:1100,height:800}});page.on('pageerror',e=>console.log('PAGEERROR',e.message));
- for(const map of ['berth4','crossdock','frostpier']){
+ for(const map of ['berth4','crossdock','frostpier','eaglesnest']){
   await page.goto('http://127.0.0.1:8087/index.html?map='+map+'&mission=4&q=low&noaudio=1');await page.waitForFunction(()=>window.__ready,null,{timeout:90000});
   await page.evaluate(async()=>{__G.renderer.setAnimationLoop(null);await __G.assets.prepareMode('foot');await __G.assets.prepareMode('fpv');document.getElementById('boot').remove();});
   assert.equal(await page.locator('button[data-pilot="fpv"]').getAttribute('aria-pressed'),'true');
@@ -38,7 +38,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
     g.game.pause();const time=run.time;g.game.update(3);check(run.time===time,'pause advanced mission');g.game.resume();
     g.player.invulnerable=false;g.player.damage(9999,g.player.pos);g.game.update(2);check(g.game.state==='dead','FPV death');
     const summary={id,total:run.totalEnemies,types:[...types],cap};
-    g.game.start({mission:0,skipIntro:true});check(!g.player.fpv&&g.weapon.selected===0&&g.player.onGround,'foot mode not restored');
+    g.game.start({mission:0,skipIntro:true});check(!g.player.fpv&&g.weapon.selected===(g.level.defaultWeapon??0)&&g.player.onGround,'foot mode not restored');
     return {...summary,errors:__errors.slice(),fatal:__fatal};
    },id);assert.deepEqual(result.errors,[]);assert.equal(result.fatal,null);console.log('FPV MISSION PASS',map,result);
   }
